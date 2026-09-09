@@ -7,7 +7,12 @@
     "rootDir": "src",
     "sourceMap": true,
     "declaration": false,
-    "types": ["node"]
+    "types": [
+      "node"
+    ],
+    "target": "ES2018"
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

@@ -5,14 +5,14 @@
  * testow. Metryka nie byla dopasowywana do wynikow.
  *
  * Uzycie:
- *   npx tsx scripts/metrics.ts [--no-mutation] [--label NAZWA]
+ *   npx tsx scripts/metrics.ts [--no-mutation] [--label NAZWA] [--out PLIK]
  *
- * Wynik: results/<branch>.json
+ * Wynik: results/<branch>.json (albo sciezka z --out)
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { globSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 
 const repoRoot = resolve(import.meta.dirname, "..");
 
@@ -255,6 +255,8 @@ const args = process.argv.slice(2);
 const skipMutation = args.includes("--no-mutation");
 const labelIndex = args.indexOf("--label");
 const label = labelIndex === -1 ? undefined : args[labelIndex + 1];
+const outIndex = args.indexOf("--out");
+const outOverride = outIndex === -1 ? undefined : args[outIndex + 1];
 
 const branch = currentBranch();
 console.log(`==> metryki dla brancha: ${branch}`);
@@ -293,8 +295,11 @@ const report = {
   mutation,
 };
 
-mkdirSync(resolve(repoRoot, "results"), { recursive: true });
-const outputPath = resolve(repoRoot, `results/${branch.replace(/\//g, "-")}.json`);
+const outputPath =
+  outOverride === undefined
+    ? resolve(repoRoot, `results/${branch.replace(/\//g, "-")}.json`)
+    : resolve(repoRoot, outOverride);
+mkdirSync(dirname(outputPath), { recursive: true });
 writeFileSync(outputPath, JSON.stringify(report, null, 2) + "\n");
 
 console.log(`\ngotowe -> ${outputPath}`);

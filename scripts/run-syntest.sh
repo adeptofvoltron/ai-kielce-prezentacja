@@ -25,6 +25,9 @@ done
 
 TOTAL_TIME=$((SEARCH_TIME + 30))
 
+echo "==> 0/4 czyszczenie poprzedniego wyniku"
+rm -f tests/*.sbst.test.ts artifacts/syntest-raw/*.spec.js
+
 echo "==> 1/4 kompilacja src/*.ts -> dist/*.js (SynTest nie parsuje TypeScriptu)"
 npx tsc -p tsconfig.build.json
 

@@ -100,3 +100,52 @@ Na funkcji o 12 galeziach, przy `--search-time 40 --random-seed 42`:
 Sciezka `TS -> tsc -> dist -> DynaMOSA -> transformacja -> vitest na src`
 jest wiec przejezdna od konca do konca. Fallback na wlasny silnik GA nie byl
 potrzebny.
+
+---
+
+## Ustalenia z pierwszego pelnego przebiegu
+
+Dwie rzeczy wyszly dopiero na czterech modulach, nie na jednej funkcji ze spike'a.
+
+### Klasy: `target: ES2022` wywala inferencje typow
+
+Przy `"target": "ES2022"` TypeScript emituje prawdziwe pola klasy
+(`lines = []` w ciele klasy). SynTest przewraca sie na nich w fazie
+`Resolving types`:
+
+```
+warn:  Cannot find binding for lines at dist/cart.js:13:4
+warn:  Cannot find binding for discountPct at dist/cart.js:14:4
+TypeError: Cannot use 'in' operator to search for 'name' in undefined
+    at InferenceTypeModelFactory._classProperty (...)
+```
+
+Rozwiazanie: `tsconfig.build.json` ma `"target": "ES2018"`, przy ktorym pola
+sa inicjalizowane w konstruktorze (`this.lines = []`). Zmiana dotyczy
+wylacznie artefaktu budowania dla SBST - `src/` jest wspolne dla wszystkich
+branchy i nietkniete.
+
+### Testy dla modulu A importuja bindingi z modulu B
+
+SynTest ma *statement pool*: wartosci uzyte w jednym miejscu moga posluzyc
+jako kandydaci w innym. Efektem jest to, ze `test-pricing.spec.js` deklaruje
+i importuje takze `Cart`:
+
+```js
+let Cart;
+let calculateShipping;
+beforeEach(() => {
+  delete require.cache[require.resolve("../../dist/cart.js")];
+  delete require.cache[require.resolve("../../dist/pricing.js")];
+  ({Cart} = require("../../dist/cart.js"));
+  ({calculateShipping} = require("../../dist/pricing.js"));
+});
+```
+
+Kazdy binding dostaje osobna linie `let`, a modulow moze byc wiele. Pierwsza
+wersja transformacji zakladala jeden binding i jeden modul wyprowadzony
+z nazwy pliku - efekt byl taki, ze 39 z 82 testow padalo na
+`calculateShipping is not a function`.
+
+`scripts/syntest-to-vitest.ts` czyta wiec mapowanie binding -> modul
+z samego bloku `beforeEach`, a nie z nazwy pliku.
