@@ -22,25 +22,37 @@ EFFORT="$(sed -n 's/^effort: *//p' "$PROMPT_FILE" | head -1)"
 # tresc = wszystko po drugim wystapieniu linii "---"
 BODY="$(awk 'seen==2 {print} /^---$/ {seen++}' "$PROMPT_FILE")"
 
-# Straznik stanu wejsciowego. Prompt, ktory generuje testy od zera, musi
-# zastac puste tests/ - inaczej model zobaczy pliki z poprzedniego przebiegu
-# i uzna je za swoje, co uniewaznia wynik wariantu. Prompt pracujacy na
-# istniejacym suite deklaruje to polem `wejscie:` we frontmatterze.
-EXPECTS_INPUT="$(sed -n 's/^wejscie: *//p' "$PROMPT_FILE" | head -1)"
-EXISTING="$(find tests -maxdepth 1 -name '*.llm.test.ts' | wc -l)"
+# Straznik stanu wejsciowego. Prompt deklaruje we frontmatterze, czego
+# oczekuje w tests/, a skrypt to sprawdza przed uruchomieniem modelu:
+#
+#   tests: puste       - suite ma powstac od zera; jesli w tests/ cos lezy,
+#                        model przeczyta to i uzna za swoje (zdarzylo sie)
+#   tests: istniejace  - prompt pracuje na gotowym suite
+#   tests: nieistotne  - prompt nie dotyka testow (np. ekstrakcja intencji)
+EXPECTED_TESTS="$(sed -n 's/^tests: *//p' "$PROMPT_FILE" | head -1)"
+: "${EXPECTED_TESTS:?frontmatter promptu musi zawierac pole tests: puste|istniejace|nieistotne}"
+EXISTING="$(find tests -maxdepth 1 -name '*.test.ts' | wc -l)"
 
-if [[ -z "$EXPECTS_INPUT" && "$EXISTING" -gt 0 ]]; then
-  echo "blad: tests/ zawiera $EXISTING plikow *.llm.test.ts, a prompt $NAME" >&2
-  echo "      generuje suite od zera. Wyczysc je najpierw:" >&2
-  echo "        rm -f tests/*.llm.test.ts" >&2
-  exit 1
-fi
-
-if [[ -n "$EXPECTS_INPUT" && "$EXISTING" -eq 0 ]]; then
-  echo "blad: prompt $NAME pracuje na istniejacym suite ($EXPECTS_INPUT)," >&2
-  echo "      a tests/ jest puste." >&2
-  exit 1
-fi
+case "$EXPECTED_TESTS" in
+  puste)
+    if [[ "$EXISTING" -gt 0 ]]; then
+      echo "blad: prompt $NAME generuje suite od zera, a tests/ zawiera" >&2
+      echo "      $EXISTING plikow *.test.ts. Wyczysc je najpierw." >&2
+      exit 1
+    fi
+    ;;
+  istniejace)
+    if [[ "$EXISTING" -eq 0 ]]; then
+      echo "blad: prompt $NAME pracuje na istniejacym suite, a tests/ jest puste." >&2
+      exit 1
+    fi
+    ;;
+  nieistotne) ;;
+  *)
+    echo "blad: nieznana wartosc 'tests: $EXPECTED_TESTS' w $PROMPT_FILE" >&2
+    exit 1
+    ;;
+esac
 
 mkdir -p artifacts/llm
 
