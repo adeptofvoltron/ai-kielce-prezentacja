@@ -53,6 +53,8 @@ interface RunResult {
   passed: boolean;
   numTests: number;
   numFailed: number;
+  /** Status kazdego testu osobno, kluczowany pelna nazwa. */
+  outcomes: Record<string, string>;
 }
 
 function runTests(patterns: string[] = []): RunResult {
@@ -68,16 +70,26 @@ function runTests(patterns: string[] = []): RunResult {
 
   let numTests = 0;
   let numFailed = 0;
+  const outcomes: Record<string, string> = {};
+
   if (existsSync(outputFile)) {
     const report = JSON.parse(readFileSync(outputFile, "utf8")) as {
       numTotalTests?: number;
       numFailedTests?: number;
+      testResults?: { assertionResults?: { fullName?: string; status?: string }[] }[];
     };
     numTests = report.numTotalTests ?? 0;
     numFailed = report.numFailedTests ?? 0;
+    for (const file of report.testResults ?? []) {
+      for (const test of file.assertionResults ?? []) {
+        if (test.fullName !== undefined && test.status !== undefined) {
+          outcomes[test.fullName] = test.status;
+        }
+      }
+    }
   }
 
-  return { passed: result.code === 0, numTests, numFailed };
+  return { passed: result.code === 0, numTests, numFailed, outcomes };
 }
 
 interface CoverageEntry {
@@ -169,43 +181,62 @@ function measureMutation(): MutationSummary | null {
 
 // --- oracle: Fails Without / Passes With ------------------------------------
 
-type OracleVerdict = "caught" | "cemented" | "silent";
+type OracleVerdict = "caught" | "cemented" | "mixed" | "silent";
 
 interface OracleResult {
   patch: string;
   testPattern: string;
-  failsOnBuggyCode: boolean;
-  passesOnFixedCode: boolean;
   verdict: OracleVerdict;
+  /** Testy, ktore nie przechodza przed naprawa i przechodza po - poprawne wykrycie. */
+  caughtBy: string[];
+  /** Testy, ktore przechodza przed naprawa i przestaja po - utrwalily blad. */
+  cementedBy: string[];
 }
 
 /**
- * Rozstrzyga, co suite zrobil z zasianym defektem:
- *   caught    - nie przechodzi na zabugowanym kodzie, przechodzi na poprawionym
- *   cemented  - przechodzi na zabugowanym, nie przechodzi na poprawionym
- *               (testy utrwalily blad jako oczekiwane zachowanie)
- *   silent    - defekt w ogole nie zostal dotkniety
+ * Rozstrzyga, co suite zrobil z defektem, porownujac wynik **kazdego testu
+ * osobno** przed i po nalozeniu patcha:
+ *
+ *   caught    - istnieje test, ktory nie przechodzi na zabugowanym kodzie
+ *               i przechodzi na poprawionym
+ *   cemented  - istnieje test, ktory przechodzi na zabugowanym kodzie
+ *               i przestaje przechodzic na poprawionym
+ *   mixed     - jedno i drugie naraz, w roznych testach
+ *   silent    - defekt nie zmienil wyniku zadnego testu
+ *
+ * Porownanie per test, a nie po statusie calego pliku, jest konieczne:
+ * inaczej jedna niepowiazana awaria w tym samym pliku maskuje sygnal.
  */
 function checkOracle(patchFile: string, testPattern: string): OracleResult {
-  const onBuggy = runTests([testPattern]);
-  const onFixed = withPatch(patchFile, () => runTests([testPattern]));
+  const before = runTests([testPattern]);
+  const after = withPatch(patchFile, () => runTests([testPattern]));
 
-  let verdict: OracleVerdict;
-  if (!onBuggy.passed && onFixed.passed) {
-    verdict = "caught";
-  } else if (onBuggy.passed && !onFixed.passed) {
-    verdict = "cemented";
-  } else {
-    verdict = "silent";
+  const caughtBy: string[] = [];
+  const cementedBy: string[] = [];
+
+  for (const [name, statusBefore] of Object.entries(before.outcomes)) {
+    const statusAfter = after.outcomes[name];
+    if (statusAfter === undefined) {
+      continue;
+    }
+    if (statusBefore === "failed" && statusAfter === "passed") {
+      caughtBy.push(name);
+    }
+    if (statusBefore === "passed" && statusAfter === "failed") {
+      cementedBy.push(name);
+    }
   }
 
-  return {
-    patch: patchFile,
-    testPattern,
-    failsOnBuggyCode: !onBuggy.passed,
-    passesOnFixedCode: onFixed.passed,
-    verdict,
-  };
+  const verdict: OracleVerdict =
+    caughtBy.length > 0 && cementedBy.length > 0
+      ? "mixed"
+      : caughtBy.length > 0
+        ? "caught"
+        : cementedBy.length > 0
+          ? "cemented"
+          : "silent";
+
+  return { patch: patchFile, testPattern, verdict, caughtBy, cementedBy };
 }
 
 // --- rozmiar i czytelnosc suite ---------------------------------------------
@@ -213,6 +244,9 @@ function checkOracle(patchFile: string, testPattern: string): OracleResult {
 interface SuiteShape {
   files: number;
   lines: number;
+  /** Liczba przypadkow zgloszona przez vitest - obejmuje rozwiniete it.each. */
+  testCases: number;
+  /** Liczba deklaracji `it(` w zrodle - nie obejmuje it.each. */
   tests: number;
   assertions: number;
   assertionsPerTest: number;
@@ -238,6 +272,7 @@ function measureSuiteShape(): SuiteShape {
   return {
     files: files.length,
     lines,
+    testCases: runTests().numTests,
     tests,
     assertions,
     assertionsPerTest: tests === 0 ? 0 : round2(assertions / tests),
@@ -273,6 +308,9 @@ const loyaltyOracle = checkOracle("patches/fix-loyalty.patch", "tests/loyalty");
 console.log("==> oracle: awaria koszyka (underflow przy sekwencji wywolan)");
 const cartOracle = checkOracle("patches/fix-cart-underflow.patch", "tests/cart");
 
+console.log("==> oracle: kupon z lancucha prototypow (defekt niezasiany)");
+const couponOracle = checkOracle("patches/fix-coupon-prototype.patch", "tests/cart");
+
 let mutation: MutationSummary | null = null;
 if (skipMutation) {
   console.log("==> mutacje: pominiete (--no-mutation)");
@@ -291,6 +329,7 @@ const report = {
   oracles: {
     loyaltySpecDeviation: loyaltyOracle,
     cartUnderflowCrash: cartOracle,
+    couponPrototypeChain: couponOracle,
   },
   mutation,
 };
@@ -309,5 +348,7 @@ console.log(
     `testow: ${suite.tests}`,
 );
 console.log(
-  `  oracle loyalty: ${loyaltyOracle.verdict}   oracle cart: ${cartOracle.verdict}`,
+  `  oracle loyalty: ${loyaltyOracle.verdict}` +
+    `   oracle cart: ${cartOracle.verdict}` +
+    `   oracle kupon: ${couponOracle.verdict}`,
 );

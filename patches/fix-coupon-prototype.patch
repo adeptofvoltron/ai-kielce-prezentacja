@@ -1,0 +1,26 @@
+--- a/src/cart.ts
++++ b/src/cart.ts
+@@ -4,10 +4,10 @@
+   qty: number;
+ }
+ 
+-const COUPONS: Record<string, number> = {
+-  SAVE10: 10,
+-  HALF: 50,
+-};
++const COUPONS = new Map<string, number>([
++  ["SAVE10", 10],
++  ["HALF", 50],
++]);
+ 
+ /**
+  * Koszyk zakupowy.
+@@ -47,7 +47,7 @@
+   }
+ 
+   applyCoupon(code: string): void {
+-    const pct = COUPONS[code];
++    const pct = COUPONS.get(code);
+     if (pct === undefined) {
+       throw new Error("unknown coupon");
+     }

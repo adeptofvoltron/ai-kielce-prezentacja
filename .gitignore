@@ -9,3 +9,4 @@ logs/
 statistics/
 *.tsbuildinfo
 .DS_Store
+.stryker-tmp/

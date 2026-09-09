@@ -11,10 +11,11 @@ Cala warstwa pomiarowa (`scripts/metrics.ts`, oba patche w `patches/`,
 pierwszego testu. Zaden prog ani zadna metryka nie byly pozniej dopasowywane
 do wyniku.
 
-## Cztery scenariusze i po co sa
+## Piec scenariuszy i po co sa
 
 Kazda funkcja w `src/` istnieje po to, zeby sfalsyfikowac lub potwierdzic
-jedna konkretna teze o automatycznej generacji testow.
+jedna konkretna teze o automatycznej generacji testow. Cztery pierwsze
+scenariusze byly zaplanowane; piaty dopisala rzeczywistosc.
 
 ### 1. `calculateShipping` - baseline pokrycia
 
@@ -66,6 +67,38 @@ Specyfikacja **milczy** na temat zdejmowania wiekszej liczby sztuk niz jest
 w koszyku. To celowe: to defekt implementacyjny, ktorego nie widac ani
 w wymaganiach, ani na sciezce happy path.
 
+**Doprecyzowanie po pierwszym przebiegu.** Scenariusz mial izolowac jedna
+rzecz - eksploracje sekwencji wywolan. Okazalo sie, ze izoluje dwie, i to ta
+druga decyduje o wyniku: zeby dosiegnac awarii, `add` i `remove` musza dostac
+**ten sam** SKU. Mutacja sekwencji radzi sobie z kolejnoscia wywolan, ale nie
+z tym, ze dwa argumenty w roznych wywolaniach maja byc rowne - losowane
+stringi nigdy sie nie powtarzaja.
+
+Zostawilismy scenariusz bez zmian, bo w tej formie mierzy cos ciekawszego niz
+pierwotny zamysl: **sprzegniecie wartosci miedzy wywolaniami**. Jest to
+dokladnie ten rodzaj bariery, ktory ziarna semantyczne maja znosic - podanie
+2-3 sensownych SKU do constant poola sprawia, ze powtorzenie wartosci
+przestaje byc przypadkiem. Branch hybrydowy sprawdza to wprost.
+
+### 5. Kupon z lancucha prototypow - defekt niezasiany
+
+Ten defekt **nie byl planowany**. Znalazl go wariant `b` na branchu
+`demo/01-llm-only` - LLM, ktory dostal specyfikacje i mial pisac oracle
+z wymagan, a nie z kodu.
+
+Sekcja 4 specyfikacji mowi: nieznany kod kuponu ma dac `Error: unknown
+coupon`. Kod sprawdzal to przez `COUPONS[code] === undefined`, gdzie `COUPONS`
+byl zwyklym obiektem. Dla `code = "constructor"` (albo `"toString"`,
+`"valueOf"`, `"__proto__"`) wyrazenie zwraca odziedziczona wlasnosc
+`Object.prototype`, czyli funkcje - nie `undefined`. Wyjatek nie leci, rabat
+zostaje ustawiony na funkcje, a `total()` zwraca **NaN**.
+
+Zostawilismy defekt w kodzie i dodalismy trzeci patch
+(`patches/fix-coupon-prototype.patch`, przejscie na `Map`), zeby dal sie
+mierzyc tym samym mechanizmem co dwa zasiane. Jest to jedyny defekt w tym
+repozytorium, ktorego autor nie umiescil tam swiadomie - i chyba najlepsza
+ilustracja tego, po co w ogole wyprowadzac oracle z wymagan.
+
 ## Jak rozstrzygamy, czy suite "znalazl" defekt
 
 Samo pokrycie nic tu nie mowi - test moze wykonac zabugowana linie i przyjac
@@ -79,15 +112,22 @@ jej wynik jako poprawny. Uzywamy wiec walidacji tautologicznej
 
 Wynik:
 
-| Na kodzie z defektem | Po naprawie | Werdykt | Znaczenie |
-|---|---|---|---|
-| nie przechodzi | przechodzi | `caught` | poprawne wykrycie |
-| przechodzi | nie przechodzi | `cemented` | testy utrwalily blad jako wymaganie |
-| przechodzi | przechodzi | `silent` | defekt nietkniety |
-| nie przechodzi | nie przechodzi | `silent` | testy zle z innego powodu |
+Porownanie jest robione **per pojedynczy test**, nie po statusie calego
+pliku. Pierwsza wersja harnessu patrzyla na status pliku i natychmiast sie
+wywrocila: jedna niepowiazana awaria w `tests/cart` (ta z punktu 5 powyzej)
+maskowala sygnal z awarii underflow i dawala werdykt `silent` tam, gdzie
+powinno byc `caught`.
+
+| Jest test, ktory... | Werdykt | Znaczenie |
+|---|---|---|
+| nie przechodzi przed naprawa i przechodzi po | `caught` | poprawne wykrycie |
+| przechodzi przed naprawa i nie przechodzi po | `cemented` | test utrwalil blad jako wymaganie |
+| jedno i drugie, w roznych testach | `mixed` | czesc suite wykryla, czesc utrwalila |
+| ani jedno, ani drugie | `silent` | defekt nie zmienil wyniku zadnego testu |
 
 Patche: `patches/fix-loyalty.patch` (scenariusz 3),
-`patches/fix-cart-underflow.patch` (scenariusz 4).
+`patches/fix-cart-underflow.patch` (scenariusz 4),
+`patches/fix-coupon-prototype.patch` (scenariusz 5).
 
 Werdykt `cemented` jest tu najciekawszy. Nie znaczy "testy sa slabe" -
 znaczy "testy dzialaja jako zapora regresji wokol zlego zachowania". Dokladnie
@@ -103,6 +143,16 @@ to robi narzedzie, ktore zaklada poprawnosc kodu.
 - **liczba testow, linie, asercje na test** - koszt utrzymania suite.
 - **nazwy bez intencji** - liczba testow nazwanych `Test N for '<modul>'`.
   Prosty, mechaniczny wskaznik czytelnosci.
+
+## Pulapka pomiarowa, o ktora sie potknelismy
+
+`coverage.reportOnFailure` w vitescie jest domyslnie **wylaczone**: gdy
+ktorykolwiek test nie przechodzi, raport pokrycia nie jest zapisywany wcale.
+
+W normalnym projekcie to sensowny domysl. Tutaj bylo odwrotnie: suite, ktory
+poprawnie wykrywa zasiany defekt, **nie przechodzi** - i wlasnie tym branchom
+harness zerowal pokrycie, podczas gdy branche utrwalajace blad dostawaly pelne
+liczby. `vitest.config.ts` ustawia wiec `reportOnFailure: true`.
 
 ## Powtarzalnosc
 

@@ -22,6 +22,26 @@ EFFORT="$(sed -n 's/^effort: *//p' "$PROMPT_FILE" | head -1)"
 # tresc = wszystko po drugim wystapieniu linii "---"
 BODY="$(awk 'seen==2 {print} /^---$/ {seen++}' "$PROMPT_FILE")"
 
+# Straznik stanu wejsciowego. Prompt, ktory generuje testy od zera, musi
+# zastac puste tests/ - inaczej model zobaczy pliki z poprzedniego przebiegu
+# i uzna je za swoje, co uniewaznia wynik wariantu. Prompt pracujacy na
+# istniejacym suite deklaruje to polem `wejscie:` we frontmatterze.
+EXPECTS_INPUT="$(sed -n 's/^wejscie: *//p' "$PROMPT_FILE" | head -1)"
+EXISTING="$(find tests -maxdepth 1 -name '*.llm.test.ts' | wc -l)"
+
+if [[ -z "$EXPECTS_INPUT" && "$EXISTING" -gt 0 ]]; then
+  echo "blad: tests/ zawiera $EXISTING plikow *.llm.test.ts, a prompt $NAME" >&2
+  echo "      generuje suite od zera. Wyczysc je najpierw:" >&2
+  echo "        rm -f tests/*.llm.test.ts" >&2
+  exit 1
+fi
+
+if [[ -n "$EXPECTS_INPUT" && "$EXISTING" -eq 0 ]]; then
+  echo "blad: prompt $NAME pracuje na istniejacym suite ($EXPECTS_INPUT)," >&2
+  echo "      a tests/ jest puste." >&2
+  exit 1
+fi
+
 mkdir -p artifacts/llm
 
 echo "==> $NAME"
@@ -32,46 +52,22 @@ echo
 START="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 SECONDS=0
 
+# stream-json + --verbose zapisuje kazde wywolanie narzedzia, nie tylko
+# koncowa odpowiedz. Dzieki temu w repo jest pelny log tego, co model zrobil:
+# ktore pliki czytal, jakie komendy uruchamial, co edytowal.
 printf '%s' "$BODY" | claude -p \
   --model "$MODEL" \
   --effort "$EFFORT" \
-  --permission-mode acceptEdits \
-  --output-format json \
-  > "artifacts/llm/${NAME}.json"
+  --permission-mode bypassPermissions \
+  --output-format stream-json \
+  --verbose \
+  > "artifacts/llm/${NAME}.jsonl"
 
 ELAPSED="$SECONDS"
 
-python3 - "$NAME" "$MODEL" "$EFFORT" "$START" "$ELAPSED" <<'PY'
-import json, sys
-
-name, model, effort, started, elapsed = sys.argv[1:6]
-with open(f"artifacts/llm/{name}.json") as handle:
-    data = json.load(handle)
-
-usage = data.get("usage", {}) or {}
-record = {
-    "prompt": name,
-    "model": model,
-    "effort": effort,
-    "startedAt": started,
-    "wallTimeSeconds": int(elapsed),
-    "turns": data.get("num_turns"),
-    "costUSD": data.get("total_cost_usd"),
-    "inputTokens": usage.get("input_tokens"),
-    "outputTokens": usage.get("output_tokens"),
-    "cacheReadTokens": usage.get("cache_read_input_tokens"),
-    "cacheCreationTokens": usage.get("cache_creation_input_tokens"),
-}
-with open(f"artifacts/llm/{name}.usage.json", "w") as handle:
-    json.dump(record, handle, indent=2)
-    handle.write("\n")
-
-print(f"    tur:     {record['turns']}")
-print(f"    czas:    {record['wallTimeSeconds']} s")
-print(f"    tokeny:  in {record['inputTokens']} / out {record['outputTokens']}")
-print(f"    koszt:   {record['costUSD']} USD")
-PY
+python3 scripts/llm-usage.py "$NAME" "$MODEL" "$EFFORT" "$START" "$ELAPSED"
 
 echo
-echo "transkrypt: artifacts/llm/${NAME}.json"
+echo "transkrypt: artifacts/llm/${NAME}.jsonl"
 echo "zuzycie:    artifacts/llm/${NAME}.usage.json"
+echo "narzedzia:  artifacts/llm/${NAME}.tools.json"

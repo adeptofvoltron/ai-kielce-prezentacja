@@ -16,6 +16,7 @@ interface Report {
   label: string;
   generatedAt: string;
   suite: {
+    testCases?: number;
     tests: number;
     lines: number;
     assertionsPerTest: number;
@@ -51,6 +52,7 @@ function cell(value: string | number | undefined): string {
 const VERDICT_LABEL: Record<string, string> = {
   caught: "wykryty",
   cemented: "utrwalony",
+  mixed: "mieszany",
   silent: "nietkniety",
 };
 
@@ -61,7 +63,7 @@ const rows: string[][] = [
   ["pokrycie linii (src)", ...reports.map((r) => cell(r.coverage["total"]?.lines.pct) + "%")],
   ["mutation score", ...reports.map((r) => (r.mutation === null ? "-" : `${r.mutation.score}%`))],
   ["mutanty przezyle", ...reports.map((r) => (r.mutation === null ? "-" : cell(r.mutation.survived)))],
-  ["liczba testow", ...reports.map((r) => cell(r.suite.tests))],
+  ["liczba testow", ...reports.map((r) => cell(r.suite.testCases ?? r.suite.tests))],
   ["linii kodu testow", ...reports.map((r) => cell(r.suite.lines))],
   ["asercji na test", ...reports.map((r) => cell(r.suite.assertionsPerTest))],
   ["nazwy bez intencji", ...reports.map((r) => cell(r.suite.genericTestNames))],
@@ -72,6 +74,10 @@ const rows: string[][] = [
   [
     "awaria koszyka (cart)",
     ...reports.map((r) => VERDICT_LABEL[r.oracles["cartUnderflowCrash"]?.verdict ?? ""] ?? "-"),
+  ],
+  [
+    "kupon z prototypu (niezasiany)",
+    ...reports.map((r) => VERDICT_LABEL[r.oracles["couponPrototypeChain"]?.verdict ?? ""] ?? "-"),
   ],
 ];
 
@@ -90,7 +96,11 @@ ${table}
   nalozeniu patcha. To poprawne wykrycie defektu (Fails Without / Passes With).
 - **utrwalony** - suite przechodzi na zabugowanym kodzie i przestaje przechodzic
   po jego naprawie. Testy zapisaly blad jako oczekiwane zachowanie.
-- **nietkniety** - suite nie dotyka defektu w ogole.
+- **mieszany** - jeden test wykryl defekt, a inny go utrwalil.
+- **nietkniety** - defekt nie zmienil wyniku zadnego testu.
+
+Porownanie jest robione **per test**, nie po statusie calego pliku - inaczej
+jedna niepowiazana awaria maskowalaby sygnal.
 
 Metodologia pomiaru: [../docs/METODOLOGIA.md](../docs/METODOLOGIA.md).
 `;
