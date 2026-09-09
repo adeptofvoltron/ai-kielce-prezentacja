@@ -46,6 +46,9 @@ Trzy rzeczy, ktorych nie planowalismy, a ktore okazaly sie najciekawsze:
 | `demo/03-hybrid` | pipeline neuro-symboliczny: intencja -> ziarna -> SBST -> oracle |
 | `demo/04-results` | `results/COMPARISON.md` - zestawienie wszystkich pomiarow |
 
+Chcesz to pokazac na zywo? [`docs/KROK-PO-KROKU.md`](docs/KROK-PO-KROKU.md)
+- osiem linii kodu i lista komend do przepisania, najdluzsza trwa 26 sekund.
+
 Jesli masz czas na jedna rzecz: [`docs/PRESENTATION.md`](docs/PRESENTATION.md)
 mapuje kazda teze artykulu na konkretna liczbe i miejsce w repozytorium,
 razem z lista tego, czego to repozytorium **nie** dowodzi.

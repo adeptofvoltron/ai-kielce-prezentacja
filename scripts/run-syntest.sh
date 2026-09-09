@@ -67,22 +67,28 @@ if [[ -n "$SEEDS_FILE" ]]; then
     node scripts/filter-seeds.mjs "$SEEDS_FILE" "$SEEDS_IN_DIST"
   fi
 
-  # --target-exclude nie wystarcza: narzedzie i tak bierze plik z ziarnami
-  # jako cel i marnuje na niego budzet przeszukiwania. Podajemy wiec jawna
-  # liste celow, zbudowana z src/*.ts, zamiast polegac na globie.
-  TARGET_ARGS=()
-  if [[ -n "$ONLY_TARGET" ]]; then
-    TARGET_ARGS+=(--target-include "./dist/${ONLY_TARGET}.js")
-  else
-    for source in src/*.ts; do
-      TARGET_ARGS+=(--target-include "./dist/$(basename "$source" .ts).js")
-    done
-  fi
+  ANALYSIS_ARGS=(--analysis-include "./dist/**/*.js")
+fi
 
-  ANALYSIS_ARGS=(
-    "${TARGET_ARGS[@]}"
-    --analysis-include "./dist/**/*.js"
-  )
+# Jawna lista celow.
+#
+# Potrzebna z dwoch powodow. Po pierwsze, przy wstrzykniętych ziarnach
+# --target-exclude nie wystarcza: narzedzie i tak bierze plik z ziarnami jako
+# cel i marnuje na niego caly slot budzetu. Po drugie, --only-target pozwala
+# przeszukac jeden modul zamiast czterech, co skraca przebieg z ~7 minut
+# do ~40 sekund.
+TARGET_ARGS=()
+if [[ -n "$ONLY_TARGET" ]]; then
+  if [[ ! -f "src/${ONLY_TARGET}.ts" ]]; then
+    echo "blad: nie ma modulu src/${ONLY_TARGET}.ts" >&2
+    exit 1
+  fi
+  echo "==> tylko jeden cel: ${ONLY_TARGET}"
+  TARGET_ARGS+=(--target-include "./dist/${ONLY_TARGET}.js")
+elif [[ -n "$SEEDS_FILE" ]]; then
+  for source in src/*.ts; do
+    TARGET_ARGS+=(--target-include "./dist/$(basename "$source" .ts).js")
+  done
 fi
 
 echo "==> 2/4 przeszukiwanie: DynaMOSA, seed=$SEED, search-time=${SEARCH_TIME}s"
@@ -90,6 +96,7 @@ npx syntest javascript test \
   --random-seed "$SEED" \
   --search-time "$SEARCH_TIME" \
   --total-time "$TOTAL_TIME" \
+  "${TARGET_ARGS[@]+"${TARGET_ARGS[@]}"}" \
   "${ANALYSIS_ARGS[@]+"${ANALYSIS_ARGS[@]}"}"
 
 rm -f "$SEEDS_IN_DIST"
