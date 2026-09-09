@@ -1,0 +1,14 @@
+{
+  "prompt": "01c-repair-loop",
+  "model": "claude-sonnet-5",
+  "effort": "medium",
+  "startedAt": "2026-09-09T07:30:49Z",
+  "wallTimeSeconds": 72,
+  "turns": 13,
+  "costUSD": 0.3179032,
+  "inputTokens": 12,
+  "outputTokens": 6069,
+  "cacheReadTokens": 200756,
+  "cacheCreationTokens": 53735,
+  "toolCalls": 12
+}

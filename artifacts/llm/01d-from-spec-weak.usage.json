@@ -1,0 +1,14 @@
+{
+  "prompt": "01d-from-spec-weak",
+  "model": "claude-haiku-4-5-20251001",
+  "effort": "low",
+  "startedAt": "2026-09-09T07:34:40Z",
+  "wallTimeSeconds": 183,
+  "turns": 18,
+  "costUSD": 0.22032870000000002,
+  "inputTokens": 106,
+  "outputTokens": 18567,
+  "cacheReadTokens": 500527,
+  "cacheCreationTokens": 37627,
+  "toolCalls": 17
+}

@@ -1,0 +1,14 @@
+{
+  "prompt": "01e-repair-weak",
+  "model": "claude-sonnet-5",
+  "effort": "medium",
+  "startedAt": "2026-09-09T07:38:08Z",
+  "wallTimeSeconds": 80,
+  "turns": 17,
+  "costUSD": 0.32215119999999997,
+  "inputTokens": 22,
+  "outputTokens": 7199,
+  "cacheReadTokens": 492481,
+  "cacheCreationTokens": 37387,
+  "toolCalls": 16
+}

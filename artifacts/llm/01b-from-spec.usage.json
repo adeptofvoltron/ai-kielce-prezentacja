@@ -1,0 +1,14 @@
+{
+  "prompt": "01b-from-spec",
+  "model": "claude-opus-5",
+  "effort": "high",
+  "startedAt": "2026-09-09T07:25:42Z",
+  "wallTimeSeconds": 248,
+  "turns": 11,
+  "costUSD": 1.0614045,
+  "inputTokens": 18,
+  "outputTokens": 21828,
+  "cacheReadTokens": 309267,
+  "cacheCreationTokens": 35890,
+  "toolCalls": 10
+}

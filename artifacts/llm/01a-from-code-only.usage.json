@@ -1,0 +1,14 @@
+{
+  "prompt": "01a-from-code-only",
+  "model": "claude-opus-5",
+  "effort": "high",
+  "startedAt": "2026-09-09T07:20:47Z",
+  "wallTimeSeconds": 205,
+  "turns": 13,
+  "costUSD": 0.7346765000000001,
+  "inputTokens": 26,
+  "outputTokens": 12782,
+  "cacheReadTokens": 367045,
+  "cacheCreationTokens": 22957,
+  "toolCalls": 12
+}
