@@ -1,0 +1,142 @@
+[
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "cat intent.json",
+      "description": "Read intent.json"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "ls -la && ls -la src/ tests/ 2>/dev/null && cat .syntest.json 2>/dev/null",
+      "description": "List repo structure and syntest config"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "jq -r '.targets[] | \"=== \\(.module) :: \\(.function) [\\(.kind)]\"' intent.json; echo \"---- top-level keys:\"; jq -r 'keys' intent.json; echo \"---- per-target keys:\"; jq -r '.targets[] | \"\\(.function): \\(keys|join(\", \"))\"' intent.json",
+      "description": "Extract intent.json target structure"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "jq -r '.targets[] | select(.function==\"parseInvoiceId\")' intent.json",
+      "description": "Extract parseInvoiceId intent"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "jq -r '.targets[] | select(.function==\"calculateShipping\")' intent.json",
+      "description": "Extract calculateShipping intent"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "jq -r '.targets[] | select(.function==\"awardPoints\")' intent.json",
+      "description": "Extract awardPoints intent"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "jq -r '.targets[] | select(.kind==\"class-method\") | {function, signature, rules: [.rules[] | {id, rule}], inputDomains, errors: [.errors[] | {type,message,condition,triggers,precedence}], statefulSequences, stateDomain, specVsCode}' intent.json",
+      "description": "Extract Cart methods intent"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "jq -r '.targets[] | select(.kind==\"class-method\") | {f:.function, statefulSequences, stateDomain}' intent.json",
+      "description": "Extract stateful sequences for Cart"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "jq -r '.targets[] | select(.kind==\"class-method\") | {f:.function, inputDomains}' intent.json | head -400",
+      "description": "Extract Cart inputDomains"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "jq -r '.targets[] | select(.function==\"Cart.applyCoupon\" or .function==\"Cart.total\") | {f:.function, rules:[.rules[]|{id,rule,boundaries}], errors, inputDomainsNote}' intent.json | sed -n '1,250p'",
+      "description": "Extract applyCoupon and total rules"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "jq -r '.targets[] | select(.function==\"Cart.total\") | {rules:[.rules[]|{id,rule}], errors, inputDomainsNote, returns}' intent.json; echo \"=== ERRORS ADD/REMOVE ===\"; jq -r '.targets[] | select(.function==\"Cart.add\" or .function==\"Cart.remove\") | {f:.function, errors}' intent.json",
+      "description": "Extract Cart.total rules and errors"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "jq -r '{crossCuttingNotes, confirmedImplementationBugs}' intent.json | head -160",
+      "description": "Extract cross-cutting notes"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "jq -r '.targets[] | select(.kind==\"class-method\") | {f:.function, specVsCode}' intent.json | grep -A6 -E '\"id\": \"DIV-CART-(3|4|6|7)\"' | head -80; echo \"=== total boundaries (halfGrosz) ===\"; jq -r '.targets[] | select(.function==\"Cart.total\") | .rules[] | select(.id==\"CART-TOTAL-R3\" or .id==\"CART-TOTAL-R1\") | .boundaries' intent.json | grep -E 'priceGrosz|qty|expectedPerSpec|note|currentCode' | head -60",
+      "description": "Extract remaining cart divergences and total boundaries"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "ls -la seeds/ && cat .gitignore",
+      "description": "Check seeds dir and gitignore"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "cat > /repo/seeds/semantic-seeds.js <<'SEEDS_EOF'\n/*\n * seeds/semantic-seeds.js - ziarna semantyczne dla generatora SBST (SynTest).\n *\n * CZYM JEST TEN PLIK\n * Zbiorem literalow wydobytym z intent.json. SynTest, majac wlaczone\n * `constant-pool`, skanuje pliki w zakresie analizy i zbiera z nich WSZYSTKIE\n * literaly tekstowe i liczbowe, a potem podstawia je jako wartosci wejsciowe\n * w trakcie przeszukiwania. Ten plik istnieje wylacznie po to, zeby dostarczyc\n * pool takich wartosci: liczy sie tylko to, jakie literaly w nim wystepuja,\n * a nie to, jak sa pogrupowane ani jak nazwano zmienne.\n *\n * CZYM TEN PLIK NIE JEST\n * Nie jest testem. Nie zawiera zadnej asercji, nie importuje kodu z src/,\n * nie jest uruchamiany ani importowany przez cokolwiek. Nazwy stalych\n * i komentarze sa tu dla czlowieka - narzedzie ich nie czyta. Wartosci\n * `expected*` sa spisane jako literaly liczbowe celowo (progi i kwoty\n * wynikowe tez sa dobrymi kandydatami na wejscia), ale NIE sa oracle -\n * oracle jest w tests/ i w intent.json.\n *\n * OGRANICZENIA SKLADNI - dlaczego plik wyglada tak, a nie inaczej\n * - czysty JavaScript, bez adnotacji typow, bez `import`/`export`: parser\n *   narzedzia obsluguje tylko skladnie JS.\n * - kazda wartosc wpisana wprost. Konkatenacja (\"FV/\" + rok), backticki\n *   i wyrazenia regularne NIE sa wydobywane, wiec nie wystepuja tu wcale.\n *   Wzorce z intent.json podano tylko w komentarzach - jako string trafily by\n *   do poola jako bezuzyteczny kandydat na wejscie.\n * - brak generowania programowego i losowego: zadnych petli, `Array.from`\n *   ani `Math.random`. Wartosc, ktorej nie ma tu wpisanej wprost,\n *   nie istnieje dla narzedzia.\n *\n * CZEGO TU NIE MA - I NIE DA SIE DODAC\n * `NaN`, `Infinity` i `-Infinity` nie sa literalami, tylko identyfikatorami,\n * wiec constant pool ich nie zbierze. Musi je dostarczyc wlasne probkowanie\n * typow narzedzia. Zamiennikami literalowymi objete sa tylko te wartosci\n * specjalne, ktore da sie zapisac: 9007199254740991 (MAX_SAFE_INTEGER)\n * i 5e-324 (MIN_VALUE). Wartosci ujemne zapisano naturalnie (-1, -0.01),\n * ale w JS to operator jednoargumentowy nad literalem - parser moze wydobyc\n * sama wartosc dodatnia. Ujemne wejscia sa wiec ziarnem slabszym niz dodatnie.\n *\n * Zrodlo: intent.json (specSource docs/SPEC.md 1.4). Przy zmianie intent.json\n * ten plik nalezy wygenerowac ponownie.\n */\n\n/* ------------------------------------------------------------------ *\n * 1. parseInvoiceId(raw)  -  src/invoiceId.ts\n *    Format FV/RRRR/MM/NNNN. Dopasowanie wzorca to warunek konieczny,\n *    nie wystarczajacy: potem jeszcze rok 2000-2100 (INV-R3) i seq != 0000\n *    (INV-R4). Kolejnosc walidacji: typ -> format -> rok -> numer.\n * ------------------------------------------------------------------ */\n\n/* (1) W PELNI POPRAWNE identyfikatory - przechodza CALA walidacje.\n *     Format + rok w zakresie + numer niezerowy. */\nconst INVOICE_ID_VALID = [\n  \"FV/2026/09/0042\",\n  \"FV/2026/01/0001\",\n  \"FV/2026/12/9999\",\n  \"FV/2026/09/0001\",\n  \"FV/2026/09/9999\",\n  \"FV/2026/08/0008\",\n  \"FV/2026/10/0100\",\n  \"FV/2000/01/0001\",\n  \"FV/2100/12/9999\",\n  \"FV/2050/10/0100\",\n  \"FV/2099/11/1234\",\n];\n\n/* Poprawne z bialymi znakami na brzegach - parseInvoiceId trimuje wejscie\n * (INV-R2). To jedyny parametr tekstowy w calym SUT, ktory trimuje. */\nconst INVOICE_ID_VALID_TRIMMABLE = [\n  \"  FV/2026/09/0042  \",\n  \" FV/2026/09/0042\",\n  \"FV/2026/09/0042 \",\n  \"\\tFV/2026/09/0042\\n\",\n  \"\\tFV/2099/11/1234\\n\",\n  \"\\n\\nFV/2000/01/0001\\t\",\n];\n\n/* (2) DOKLADNIE NA GRANICY i po obu jej stronach.\n *     Rok: zakres [2000, 2100] domkniety z obu stron. */\nconst INVOICE_ID_YEAR_BOUNDARY = [\n  \"FV/1999/12/0001\",\n  \"FV/2000/01/0001\",\n  \"FV/2001/01/0001\",\n  \"FV/2099/12/9999\",\n  \"FV/2100/12/9999\",\n  \"FV/2101/01/0001\",\n  \"FV/0000/01/0001\",\n  \"FV/9999/12/9999\",\n];\n\n/* Miesiac: zakres [01, 12], zapis dokladnie dwucyfrowy. */\nconst INVOICE_ID_MONTH_BOUNDARY = [\n  \"FV/2026/00/0001\",\n  \"FV/2026/01/0001\",\n  \"FV/2026/11/0001\",\n  \"FV/2026/12/0001\",\n  \"FV/2026/13/0001\",\n  \"FV/2026/99/0001\",\n];\n\n/* Numer kolejny: 0000 odrzucone (INV-R4), 0001 to pierwsza dopuszczalna. */\nconst INVOICE_ID_SEQ_BOUNDARY = [\n  \"FV/2026/09/0000\",\n  \"FV/2026/09/0001\",\n  \"FV/2026/09/0002\",\n  \"FV/2026/09/9998\",\n  \"FV/2026/09/9999\",\n  \"FV/2000/01/0000\",\n];\n\n/* (3) NARUSZENIA FORMATU NIEOCZYWISTE - takie, ktorych losowy string\n *     nie trafi, a ktore lamia dokladnie jeden warunek wzorca. */\n\n/* Dobra dlugosc i dobry uklad separatorow, zly prefiks. */\nconst INVOICE_ID_BAD_PREFIX = [\n  \"fv/2026/09/0042\",\n  \"Fv/2026/09/0042\",\n  \"fV/2026/09/0042\",\n  \"FX/2026/09/0042\",\n  \"VF/2026/09/0042\",\n  \"F/2026/09/0042\",\n  \"FVV/2026/09/0042\",\n  \"/2026/09/0042\",\n];\n\n/* Dobry prefiks, zla liczba cyfr w segmencie. */\nconst INVOICE_ID_BAD_DIGIT_COUNT = [\n  \"FV/26/09/0042\",\n  \"FV/202/09/0042\",\n  \"FV/20266/09/0042\",\n  \"FV/2026/9/0042\",\n  \"FV/2026/009/0042\",\n  \"FV/2026/09/042\",\n  \"FV/2026/09/00042\",\n  \"FV/2026/09/42\",\n];\n\n/* Dobry prefiks i dobre liczby cyfr, zle separatory lub arnosc. */\nconst INVOICE_ID_BAD_SEPARATORS = [\n  \"FV-2026-09-0042\",\n  \"FV.2026.09.0042\",\n  \"FV_2026_09_0042\",\n  \"FV\\\\2026\\\\09\\\\0042\",\n  \"FV/2026/09/0042/1\",\n  \"FV/2026/09/0042/\",\n  \"FV/2026//09/0042\",\n  \"FV/2026/0042\",\n  \"FV2026090042\",\n];\n\n/* Biale znaki WEWNATRZ - trim ich nie usuwa, wiec wzorzec nie pasuje. */\nconst INVOICE_ID_INNER_WHITESPACE = [\n  \"FV /2026/09/0042\",\n  \"FV/ 2026/09/0042\",\n  \"FV/2026 /09/0042\",\n  \"FV/2026/09/00 42\",\n  \"FV/2026/09 /0042\",\n  \"FV\\t2026/09/0042\",\n];\n\n/* Znaki niecyfrowe w segmentach liczbowych. */\nconst INVOICE_ID_NON_DIGIT = [\n  \"FV/2026/09/00A2\",\n  \"FV/2026/09/004a\",\n  \"FV/20X6/09/0042\",\n  \"FV/2026/0O/0042\",\n  \"FV/2026/09/-042\",\n  \"FV/2026/09/+042\",\n  \"FV/2026/09/0x42\",\n];\n\n/* Cyfry arabsko-indyjskie: `\\d` bez flagi `u` jest ASCII-only,\n * wiec te wejscia daja Error: malformed invoice id, nie poprawny wynik. */\nconst INVOICE_ID_NON_ASCII_DIGITS = [\n  \"FV/٢٠٢٦/٠٩/٠٠٤٢\",\n  \"FV/２０２６/０９/００４２\",\n];\n\n/* Puste i zdegenerowane wejscia. */\nconst INVOICE_ID_EMPTY = [\n  \"\",\n  \" \",\n  \"   \",\n  \"\\t\",\n  \"\\n\",\n  \"FV\",\n  \"FV/\",\n];\n\n/* Wiele bledow naraz - sprawdzaja KOLEJNOSC walidacji, nie sam fakt bledu.\n * \"FV/1999/13/0000\" -> malformed (format przed rokiem).\n * \"FV/1999/12/0000\" -> year out of range (rok przed numerem). */\nconst INVOICE_ID_MULTI_ERROR = [\n  \"FV/1999/13/0000\",\n  \"FV/1999/12/0000\",\n  \"FV/2101/13/0000\",\n  \"fv/1999/13/0000\",\n  \"  FV/1999/12/0000  \",\n];\n\n/* Segmenty jako liczby - wartosci zwracane w wyniku (year, month, seq)\n * oraz granice ich zakresow. Parsowanie dziesietne, nie oktalne (INV-R5). */\nconst INVOICE_ID_RESULT_NUMBERS = [\n  1999, 2000, 2001, 2026, 2050, 2099, 2100, 2101,\n  0, 1, 8, 9, 10, 11, 12, 13,\n  42, 100, 1234, 9998, 9999,\n];\n\n/* Komunikaty bledow (INV-R1..R4) - literaly tekstowe, na wypadek\n * gdyby oracle dopasowywal komunikat. */\nconst INVOICE_ID_ERROR_MESSAGES = [\n  \"invoice id must be a string\",\n  \"malformed invoice id\",\n  \"year out of supported range\",\n  \"sequence number must not be zero\",\n];\n\n/* ------------------------------------------------------------------ *\n * 2. calculateShipping(weightKg, zone, isPremium)  -  src/pricing.ts\n *    zone NIE ma wymaganego formatu: kazdy string jest legalny, a wszystko\n *    poza \"PL\" i \"EU\" wpada w galaz domyslna 79.00. Brak trim.\n *    Waga: (0, 100], progi ostre (>) na 10 i 30.\n * ------------------------------------------------------------------ */\n\n/* (5) Stale tekstowe z regul biznesowych: nazwy strefy. */\nconst SHIPPING_ZONE_SIGNIFICANT = [\n  \"PL\",\n  \"EU\",\n  \"WORLD\",\n];\n\n/* (3) Naruszenia nieoczywiste dla strefy: dobra litera, zla wielkosc lub\n *     zbedna spacja. Kazde z nich wpada w galaz 79.00, nie w swoja stawke. */\nconst SHIPPING_ZONE_NEAR_MISS = [\n  \"pl\",\n  \"eu\",\n  \"Pl\",\n  \"pL\",\n  \"Eu\",\n  \"eU\",\n  \"PL \",\n  \" PL\",\n  \" PL \",\n  \"EU \",\n  \" EU\",\n  \"P L\",\n  \"PLN\",\n  \"EUR\",\n  \"US\",\n  \"DE\",\n  \"\",\n  \"\\U0001F1F5\\U0001F1F1\",\n];\n\n/* (2) Waga - DOKLADNIE na progach 10 i 30 oraz po obu stronach.\n *     Progi sa ostre (>), wiec wartosc rowna progowi nalezy do nizszego\n *     przedzialu: 10 -> brak doplaty, 30 -> +15. */\nconst SHIPPING_WEIGHT_THRESHOLD = [\n  9.99,\n  10,\n  10.0001,\n  10.5,\n  29.99,\n  30,\n  30.0001,\n  31,\n];\n\n/* Waga - granice domeny (0, 100]. 0 odrzucone, 100 dopuszczalne. */\nconst SHIPPING_WEIGHT_DOMAIN_BOUNDARY = [\n  0,\n  0.01,\n  99.99,\n  100,\n  100.0001,\n  101,\n  1000,\n  1000000,\n  5e-324,\n];\n\n/* Waga - wartosci odrzucane (RangeError: weight must be positive).\n * -0 przechodzi warunek `<= 0`, wiec tez jest odrzucane. */\nconst SHIPPING_WEIGHT_NON_POSITIVE = [\n  0,\n  -0,\n  -0.01,\n  -1,\n  -100,\n];\n\n/* Waga - reprezentanci klas rownowaznosci (lekka / srednia / ciezka). */\nconst SHIPPING_WEIGHT_TYPICAL = [\n  1,\n  2,\n  5,\n  15,\n  20,\n  25,\n  50,\n  75,\n];\n\n/* (5) Stale liczbowe z regul SHIP-R1..R4: stawki bazowe, doplaty wagowe,\n *     mnoznik premium, progi. */\nconst SHIPPING_RULE_CONSTANTS = [\n  12,\n  29,\n  79,\n  15,\n  40,\n  0.8,\n  0.2,\n  10,\n  30,\n  100,\n  2,\n];\n\n/* Kwoty wynikowe - min i max obserwowalne oraz punkty z granic regul.\n * Wchodza do poola takze jako kandydaci na wejscie `weightKg`. */\nconst SHIPPING_EXPECTED_AMOUNTS = [\n  9.6,\n  12,\n  21.6,\n  23.2,\n  27,\n  29,\n  35.2,\n  41.6,\n  52,\n  55.2,\n  69,\n  79,\n  95.2,\n  119,\n];\n\nconst SHIPPING_ERROR_MESSAGES = [\n  \"weight must be a finite number\",\n  \"weight must be positive\",\n  \"weight above carrier limit\",\n];\n\n/* ------------------------------------------------------------------ *\n * 3. awardPoints(orderValuePLN, lifetimeSpendPLN)  -  src/loyalty.ts\n *    1 punkt / 10 PLN, zaokraglenie BANKIERSKIE (half-to-even).\n *    VIP: lifetimeSpendPLN >= 5000 podwaja punkty. Limit 5000 pkt PO VIP.\n * ------------------------------------------------------------------ */\n\n/* (2) Kwoty dajace DOKLADNA POLOWE punktu - jedyne, ktore rozrozniaja\n *     zaokraglenie bankierskie od half-up i od Math.floor.\n *     5 -> 0 (0 parzyste), 15 -> 2, 25 -> 2, 35 -> 4, 45 -> 4, 55 -> 6. */\nconst LOYALTY_ORDER_ROUNDING_TIES = [\n  5,\n  15,\n  25,\n  35,\n  45,\n  55,\n  65,\n  75,\n  105,\n  115,\n];\n\n/* Kwoty niebedace wielokrotnoscia 10 z reszta >= 5 - w tych punktach\n * Math.floor rozjezdza sie z zaokragleniem wymaganym przez SPEC.\n * Losowa wielokrotnosc 10 nigdy tego nie pokaze. */\nconst LOYALTY_ORDER_NON_MULTIPLES = [\n  4.9,\n  5.01,\n  9.99,\n  14.9,\n  16,\n  24,\n  26,\n  34.99,\n  36,\n  99.99,\n  1234.56,\n];\n\n/* Kwoty bedace dokladna wielokrotnoscia 10 - klasa kontrolna,\n * w ktorej wszystkie reguly zaokraglania daja ten sam wynik. */\nconst LOYALTY_ORDER_MULTIPLES = [\n  0,\n  10,\n  20,\n  30,\n  100,\n  1000,\n];\n\n/* (2) Limit 5000 punktow - DOKLADNIE na limicie i po obu stronach,\n *     wyrazony w kwocie zamowienia. 50000 PLN -> 5000 pkt (nie obcinane,\n *     warunek to `> 5000`), 50010 PLN -> 5001 pkt -> obciete. */\nconst LOYALTY_ORDER_CAP_BOUNDARY = [\n  49980,\n  49990,\n  50000,\n  50010,\n  50020,\n  1000000000,\n  9007199254740991,\n];\n\n/* Kwoty, przy ktorych limit dziala DOPIERO po mnozniku VIP - rozrozniaja\n * kolejnosc \"limit po VIP\" od \"limit przed VIP\".\n * 25000 -> 2500*2 = 5000; 25010 -> 2501*2 = 5002 -> obciete;\n * 30000 -> 3000 pkt pod limitem, 6000 po VIP -> obciete. */\nconst LOYALTY_ORDER_CAP_AFTER_VIP = [\n  24990,\n  25000,\n  25010,\n  30000,\n  40000,\n];\n\n/* Kwoty odrzucane (RangeError: amounts must not be negative).\n * -0 przechodzi walidacje (`-0 < 0` jest falszem) i daje 0 punktow. */\nconst LOYALTY_ORDER_NEGATIVE = [\n  -0,\n  -0.01,\n  -1,\n  -5000,\n];\n\n/* (2) Prog VIP - DOKLADNIE 5000 oraz po obu stronach. Wartosc dokladnie\n *     rowna progowi jest jedynym wejsciem rozrozniajacym `>=` od `>`.\n *     Losowanie liczb zmiennoprzecinkowych nie trafi w nia nigdy. */\nconst LOYALTY_LIFETIME_VIP_BOUNDARY = [\n  4999,\n  4999.99,\n  5000,\n  5000.01,\n  5001,\n];\n\nconst LOYALTY_LIFETIME_TYPICAL = [\n  0,\n  -0,\n  1,\n  100,\n  2500,\n  6000,\n  10000,\n  1000000000,\n];\n\nconst LOYALTY_LIFETIME_NEGATIVE = [\n  -0.01,\n  -1,\n];\n\n/* (5) Stale z regul LOY-R1..R3: przelicznik, prog VIP, mnoznik, limit. */\nconst LOYALTY_RULE_CONSTANTS = [\n  10,\n  5000,\n  2,\n];\n\n/* Liczby punktow z granic regul - takze kandydaci na wejscia liczbowe. */\nconst LOYALTY_EXPECTED_POINTS = [\n  0,\n  1,\n  2,\n  3,\n  4,\n  6,\n  10,\n  12,\n  20,\n  4000,\n  4999,\n  5000,\n  5001,\n  5002,\n  6000,\n];\n\nconst LOYALTY_ERROR_MESSAGES = [\n  \"amounts must be finite numbers\",\n  \"amounts must not be negative\",\n];\n\n/* ------------------------------------------------------------------ *\n * 4. Cart.add / remove / applyCoupon / total  -  src/cart.ts\n *    Koszyk operuje na GROSZACH (liczby calkowite), nie na PLN.\n * ------------------------------------------------------------------ */\n\n/* (4) SEKWENCJE STANOWE - maly, ZAMKNIETY zbior identyfikatorow SKU.\n *\n * To najwazniejszy fragment tego pliku. `sku` jest jedynym argumentem\n * wspolnym miedzy wywolaniami: `remove` trafia w pozycje tylko wtedy, gdy\n * uzyje DOKLADNIE tego samego stringa co poprzedzajacy `add` (porownanie\n * ===, bez trim, case-sensitive). Przy losowaniu stringow prawdopodobienstwo\n * trafienia dwa razy w te sama wartosc jest praktycznie zerowe, wiec cala\n * rodzina sekwencji biznesowych jest wtedy NIEOSIAGALNA:\n *   - SEQ-ADD-1  sumowanie ilosci przy powtornym add tego samego SKU\n *   - SEQ-REM-1  czesciowe zdjecie z pozycji\n *   - SEQ-REM-2  oproznienie pozycji do zera\n *   - SEQ-REM-3  underflow (remove wieksze niz stan)\n *   - SEQ-TOTAL-2 pelny przebieg add -> add -> remove -> applyCoupon -> total\n *\n * Zbior jest celowo DWUELEMENTOWY. Kazda dodana wartosc obniza szanse,\n * ze przeszukiwanie wylosuje ten sam identyfikator dwa razy - a to, nie\n * roznorodnosc, jest tu celem. Dwa elementy wystarczaja, bo SEQ-REM-4\n * wymaga drugiej pozycji o INNYM sku. */\nconst CART_SKU_SHARED = [\n  \"SKU-1\",\n  \"SKU-2\",\n];\n\n/* (3) SKU lamiace tozsamosc w sposob nieoczywisty: ta sama tresc, inna\n *     wielkosc liter albo spacja konczaca. Brak trim i porownanie ===\n *     powoduja, ze `remove(\"sku-1\")` po `add(\"SKU-1\")` konczy sie\n *     Error: sku not in cart, a `add(\"SKU-1 \")` tworzy DRUGA pozycje.\n *     Lista jest krotka celowo - patrz uwaga przy CART_SKU_SHARED. */\nconst CART_SKU_NEAR_MISS = [\n  \"sku-1\",\n  \"SKU-1 \",\n  \"\",\n];\n\n/* (5) Stale tekstowe z reguly CART-COUPON-R1: kody kuponow.\n *     Domena to ZAMKNIETA ENUMERACJA dwuelementowa, nie wzorzec -\n *     SPEC (Sekcja 4, tabela kuponow) nie definiuje zadnego trzeciego kodu. */\nconst CART_COUPON_VALID = [\n  \"SAVE10\",\n  \"HALF\",\n];\n\n/* (3) Kody nieoczywiscie niepoprawne: zla wielkosc liter, spacja, prefiks\n *     poprawnego kodu, poprawny kod z dopiskiem, dwa kody naraz.\n *     applyCoupon NIE trimuje - inaczej niz parseInvoiceId. */\nconst CART_COUPON_NEAR_MISS = [\n  \"save10\",\n  \"Save10\",\n  \"SAVE10 \",\n  \" SAVE10\",\n  \"SAVE 10\",\n  \"SAVE1\",\n  \"SAVE100\",\n  \"SAVE20\",\n  \"SAVE0\",\n  \"half\",\n  \"Half\",\n  \"HALF \",\n  \" HALF\",\n  \"HAL\",\n  \"HALFF\",\n  \"HALF,SAVE10\",\n  \"SAVE10,HALF\",\n  \"NIE-ISTNIEJE\",\n  \"\",\n];\n\n/* Nazwy odziedziczone z Object.prototype. Wg SPEC to zwykle nieznane\n * kupony (Error: unknown coupon); `COUPONS[code]` je przepuszcza, po czym\n * total() zwraca NaN. Zadne losowanie stringow tych wartosci nie trafi -\n * musza byc wpisane wprost. */\nconst CART_COUPON_PROTOTYPE_KEYS = [\n  \"constructor\",\n  \"__proto__\",\n  \"toString\",\n  \"valueOf\",\n  \"hasOwnProperty\",\n  \"isPrototypeOf\",\n  \"propertyIsEnumerable\",\n  \"toLocaleString\",\n  \"prototype\",\n  \"length\",\n  \"name\",\n];\n\n/* (2) priceGrosz - granice domeny: calkowita nieujemna, 0 dopuszczalne\n *     (pozycja gratisowa). -0 przechodzi walidacje. */\nconst CART_PRICE_BOUNDARY = [\n  -1,\n  -0,\n  0,\n  1,\n  2,\n  9007199254740991,\n];\n\n/* priceGrosz - wartosci nie-calkowite, odrzucane\n * (RangeError: price must be a non-negative integer of grosz). */\nconst CART_PRICE_NON_INTEGER = [\n  0.5,\n  0.99,\n  1.01,\n  1.5,\n  99.999,\n  -0.01,\n];\n\n/* priceGrosz - ceny dobrane tak, zeby rabat dal DOKLADNA POLOWE grosza.\n * Nieparzyste ceny z kuponem HALF (50%) oraz ceny przystajace do 5 mod 10\n * z kuponem SAVE10 (10%) trafiaja w granice zaokraglenia, ktorej SPEC nie\n * rozstrzyga (DIV-CART-7): 1 gr -> 0.5, 3 gr -> 1.5, 5 gr -> 2.5. */\nconst CART_PRICE_HALF_GROSZ = [\n  1,\n  3,\n  5,\n  7,\n  9,\n  15,\n  25,\n  1995,\n  1999,\n];\n\nconst CART_PRICE_TYPICAL = [\n  0,\n  1,\n  99,\n  100,\n  500,\n  1000,\n  1999,\n  5000,\n  12345,\n];\n\n/* (2) qty w add - granice domeny: calkowita DODATNIA, 0 odrzucone. */\nconst CART_QTY_BOUNDARY = [\n  -10,\n  -1,\n  -0,\n  0,\n  1,\n  2,\n  9007199254740991,\n];\n\n/* qty - wartosci nie-calkowite, odrzucane\n * (RangeError: quantity must be a positive integer). */\nconst CART_QTY_NON_INTEGER = [\n  0.5,\n  0.9,\n  1.5,\n  2.0001,\n  -0.5,\n];\n\nconst CART_QTY_TYPICAL = [\n  1,\n  2,\n  3,\n  4,\n  5,\n  10,\n  100,\n  1000000,\n];\n\n/* (4) Ilosci do sekwencji add/remove przy WSPOLNYM sku. Gorna granica\n *     `remove.qty` jest ZALEZNA OD STANU (suma qty wczesniejszych add),\n *     nie statyczna - te male liczby pozwalaja przeszukiwaniu trafic\n *     w kazdy z trzech przypadkow bez arytmetyki:\n *       remove.qty <  stan  -> zdjecie czesciowe (SEQ-REM-1)\n *       remove.qty == stan  -> oproznienie do zera (SEQ-REM-2)\n *       remove.qty >  stan  -> underflow (SEQ-REM-3, DIV-CART-1)\n *     Przy add(qty=1..5) kazda z wartosci ponizej realizuje ktorys z nich. */\nconst CART_SEQUENCE_QTY = [\n  1,\n  2,\n  3,\n  4,\n  5,\n  6,\n];\n\n/* (2) Rabaty procentowe osiagalne wg SPEC oraz granice 0 / 100. */\nconst CART_DISCOUNT_PCT = [\n  0,\n  10,\n  50,\n  100,\n  90,\n];\n\n/* Liczba pozycji w koszyku - granice stanu (pusty / jedna / wiele). */\nconst CART_LINE_COUNT_BOUNDARY = [\n  0,\n  1,\n  2,\n  10,\n];\n\n/* Kwoty wynikowe total() z granic regul CART-TOTAL-R1..R4 i sekwencji.\n * Wchodza do poola takze jako kandydaci na `priceGrosz`. */\nconst CART_EXPECTED_TOTALS = [\n  0,\n  1,\n  2,\n  3,\n  1000,\n  1796,\n  1799,\n  1800,\n  2000,\n  2700,\n  3000,\n  4500,\n  5000,\n  6997,\n  9000,\n];\n\nconst CART_ERROR_MESSAGES = [\n  \"price must be a non-negative integer of grosz\",\n  \"quantity must be a positive integer\",\n  \"sku not in cart\",\n  \"unknown coupon\",\n  \"cannot apply coupon to an empty cart\",\n  \"cart quantity underflow\",\n];\nSEEDS_EOF\nnode --check /repo/seeds/semantic-seeds.js && echo \"SYNTAX OK\"",
+      "description": "Write semantic seeds file and syntax-check"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "python3 - <<'PY'\nimport io\np='seeds/semantic-seeds.js'\ns=io.open(p,encoding='utf-8').read()\ns=s.replace('\"\\\\U0001F1F5\\\\U0001F1F1\"','\"\\U0001F1F5\\U0001F1F1\"')\nio.open(p,'w',encoding='utf-8').write(s)\nPY\nnode --check seeds/semantic-seeds.js && echo \"SYNTAX OK\"\necho \"--- forbidden constructs (template literals / regex / import / export / concat / random) ---\"\ngrep -nE '`|=>|import |export |require\\(|Math\\.random|Array\\.from|\\+ ' seeds/semantic-seeds.js | grep -v '^\\s*[0-9]*:\\s*\\*' || echo \"none found\"\necho \"--- flag string check ---\"\ngrep -n 'PL\"\\|🇵🇱' seeds/semantic-seeds.js | tail -3",
+      "description": "Fix flag escape and audit for forbidden constructs"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "ls node_modules | grep -iE '^(acorn|@babel|espree|meriyah)$' 2>/dev/null; ls node_modules/@babel 2>/dev/null | head",
+      "description": "Check for available JS parser"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "cat > /tmp/pool.cjs <<'EOF'\nconst fs=require('fs');\nconst parser=require('@babel/parser');\nconst src=fs.readFileSync('seeds/semantic-seeds.js','utf8');\nconst ast=parser.parse(src,{sourceType:'script'});\nconst strings=new Set(), numbers=new Set();\nlet tmpl=0, regex=0;\n(function walk(n){\n  if(!n||typeof n!=='object')return;\n  if(Array.isArray(n))return n.forEach(walk);\n  if(n.type==='StringLiteral')strings.add(n.value);\n  if(n.type==='NumericLiteral')numbers.add(n.value);\n  if(n.type==='TemplateLiteral')tmpl++;\n  if(n.type==='RegExpLiteral')regex++;\n  for(const k in n){if(k!=='loc'&&k!=='leadingComments'&&k!=='trailingComments'&&k!=='innerComments')walk(n[k]);}\n})(ast.program);\nconsole.log('unique string literals:',strings.size);\nconsole.log('unique numeric literals:',numbers.size);\nconsole.log('template literals:',tmpl,' regex literals:',regex);\nconst must=['FV/2026/09/0042','FV/2000/01/0001','FV/2100/12/9999','FV/1999/12/0001','FV/2101/01/0001','FV/2026/09/0000','FV/2026/13/0001','SAVE10','HALF','constructor','__proto__','SKU-1','SKU-2','sku-1','SKU-1 ','PL','EU','WORLD','pl','PL ','🇵🇱'];\nconst missS=must.filter(v=>!strings.has(v));\nconsole.log('missing required strings:',missS.length?missS:'NONE');\nconst mustN=[5000,4999.99,5000.01,10,30,100,10.0001,30.0001,100.0001,0.8,35,15,25,45,50000,50010,25000,1999,1995,3,5,1,0,9007199254740991,5e-324];\nconst missN=mustN.filter(v=>!numbers.has(v));\nconsole.log('missing required numbers:',missN.length?missN:'NONE');\nconsole.log('has -0 as literal 0:',numbers.has(0));\nEOF\nnode /tmp/pool.cjs",
+      "description": "Simulate constant-pool literal extraction"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "cp /tmp/pool.cjs ./pool-check.cjs && node ./pool-check.cjs; rm -f ./pool-check.cjs",
+      "description": "Run pool extraction check from project root"
+    }
+  },
+  {
+    "tool": "Bash",
+    "input": {
+      "command": "git status --short -- src tests .syntest.json; echo \"--- (empty above = untouched) ---\"; git status --short -- seeds; wc -l seeds/semantic-seeds.js",
+      "description": "Confirm src/tests/config untouched"
+    }
+  }
+]

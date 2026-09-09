@@ -1,0 +1,1466 @@
+{
+  "meta": {
+    "generatedFor": "wejscie dla generatora danych testowych (SBST / property-based / table-driven)",
+    "specSource": "docs/SPEC.md",
+    "specVersion": "1.4",
+    "codeSource": "src/",
+    "normativeSource": "docs/SPEC.md - w razie rozbieznosci obowiazuje SPEC, nie kod. Rozbieznosci wypisane w polu `specVsCode` kazdego targetu.",
+    "conventions": {
+      "specialValueEncoding": "Wartosci, ktorych JSON nie potrafi zapisac, podane sa jako string w polu `expr` albo jako element listy oznaczony sufiksem `@expr`. Generator musi je zmapowac: \"NaN\" -> Number.NaN, \"Infinity\" -> Number.POSITIVE_INFINITY, \"-Infinity\" -> Number.NEGATIVE_INFINITY, \"-0\" -> -0, \"undefined\" -> undefined, \"null\" -> null, \"Number.MAX_SAFE_INTEGER\" -> 9007199254740991, \"Number.MIN_VALUE\" -> 5e-324.",
+      "expected": "`expectedPerSpec` to wartosc wymagana przez docs/SPEC.md. `currentCodeBehavior` (gdy obecne) to wartosc, ktora zwraca aktualny kod w src/ - jesli oba pola sa obecne i rozne, przypadek jest testem wykrywajacym blad implementacji.",
+      "money": "calculateShipping operuje na PLN (float, 2 miejsca po przecinku). Cart operuje na groszach (integer)."
+    }
+  },
+
+  "targets": [
+    {
+      "module": "src/pricing.ts",
+      "function": "calculateShipping",
+      "kind": "pure-function",
+      "signature": "calculateShipping(weightKg: number, zone: string, isPremium: boolean): number",
+      "returns": {
+        "type": "number",
+        "unit": "PLN",
+        "constraint": "kwota nieujemna, zaokraglona do 2 miejsc po przecinku (Math.round(x*100)/100)",
+        "minObservable": 9.6,
+        "maxObservable": 119
+      },
+
+      "rules": [
+        {
+          "id": "SHIP-R1",
+          "rule": "Stawka bazowa zalezy od strefy: \"PL\" = 12.00 PLN, \"EU\" = 29.00 PLN, dowolna inna wartosc = 79.00 PLN.",
+          "specSection": "Sekcja 1: Koszt dostawy / Stawka bazowa wedlug strefy",
+          "boundaries": [
+            { "input": { "weightKg": 1, "zone": "PL", "isPremium": false }, "expectedPerSpec": 12, "note": "dokladne dopasowanie \"PL\"" },
+            { "input": { "weightKg": 1, "zone": "EU", "isPremium": false }, "expectedPerSpec": 29, "note": "dokladne dopasowanie \"EU\"" },
+            { "input": { "weightKg": 1, "zone": "WORLD", "isPremium": false }, "expectedPerSpec": 79, "note": "galaz domyslna" },
+            { "input": { "weightKg": 1, "zone": "pl", "isPremium": false }, "expectedPerSpec": 79, "note": "porownanie jest case-sensitive - \"pl\" wpada w galaz domyslna" },
+            { "input": { "weightKg": 1, "zone": "PL ", "isPremium": false }, "expectedPerSpec": 79, "note": "brak trim() - spacja konczaca lamie dopasowanie" },
+            { "input": { "weightKg": 1, "zone": "", "isPremium": false }, "expectedPerSpec": 79, "note": "pusty string to legalne wejscie, nie blad" }
+          ]
+        },
+        {
+          "id": "SHIP-R2",
+          "rule": "Doplata wagowa naliczana jednorazowo do stawki bazowej: waga > 30 kg daje +40.00 PLN, waga > 10 kg i <= 30 kg daje +15.00 PLN, waga <= 10 kg nie daje doplaty. Progi sa scisle (>) - wartosc rowna progowi nalezy do nizszego przedzialu.",
+          "specSection": "Sekcja 1: Koszt dostawy / Doplata wagowa",
+          "boundaries": [
+            { "input": { "weightKg": 10, "zone": "PL", "isPremium": false }, "expectedPerSpec": 12, "note": "10 kg wlacznie - brak doplaty (dolna strona progu 10)" },
+            { "input": { "weightKg": 10.0001, "zone": "PL", "isPremium": false }, "expectedPerSpec": 27, "note": "pierwsza wartosc powyzej 10 - doplata +15" },
+            { "input": { "weightKg": 30, "zone": "PL", "isPremium": false }, "expectedPerSpec": 27, "note": "30 kg wlacznie - nadal +15 (dolna strona progu 30)" },
+            { "input": { "weightKg": 30.0001, "zone": "PL", "isPremium": false }, "expectedPerSpec": 52, "note": "pierwsza wartosc powyzej 30 - doplata +40, nie +55 (doplaty sie nie kumuluja)" },
+            { "input": { "weightKg": 100, "zone": "PL", "isPremium": false }, "expectedPerSpec": 52, "note": "gorna dopuszczalna waga" }
+          ]
+        },
+        {
+          "id": "SHIP-R3",
+          "rule": "Klient premium (isPremium === true) placi 80% kwoty wyliczonej po stawce bazowej i doplacie wagowej.",
+          "specSection": "Sekcja 1: Koszt dostawy / Rabat premium",
+          "boundaries": [
+            { "input": { "weightKg": 1, "zone": "PL", "isPremium": true }, "expectedPerSpec": 9.6, "note": "12 * 0.8" },
+            { "input": { "weightKg": 1, "zone": "PL", "isPremium": false }, "expectedPerSpec": 12, "note": "przelacznik false" },
+            { "input": { "weightKg": 20, "zone": "EU", "isPremium": true }, "expectedPerSpec": 35.2, "note": "(29 + 15) * 0.8" },
+            { "input": { "weightKg": 100, "zone": "WORLD", "isPremium": true }, "expectedPerSpec": 95.2, "note": "(79 + 40) * 0.8 - maksymalny rabat premium" },
+            { "input": { "weightKg": 30.0001, "zone": "PL", "isPremium": true }, "expectedPerSpec": 41.6, "note": "(12 + 40) * 0.8 - rabat po doplacie, nie przed" }
+          ]
+        },
+        {
+          "id": "SHIP-R4",
+          "rule": "Wynik jest kwota w zlotych zaokraglona do dwoch miejsc po przecinku.",
+          "specSection": "Sekcja 1: Koszt dostawy / Wynik",
+          "boundaries": [
+            { "input": { "weightKg": 10.5, "zone": "PL", "isPremium": true }, "expectedPerSpec": 21.6, "note": "27 * 0.8 - mnozenie float musi zostac dociete do 2 miejsc" },
+            { "input": { "weightKg": 31, "zone": "EU", "isPremium": true }, "expectedPerSpec": 55.2, "note": "69 * 0.8" }
+          ],
+          "invariant": "Math.abs(result * 100 - Math.round(result * 100)) < 1e-9"
+        }
+      ],
+
+      "inputDomains": {
+        "weightKg": {
+          "type": "number",
+          "hasRequiredTextFormat": false,
+          "allowedRange": { "min": 0, "minInclusive": false, "max": 100, "maxInclusive": true },
+          "description": "Waga w kilogramach. Skonczona liczba z przedzialu (0, 100]. Nie musi byc calkowita.",
+          "equivalenceClasses": [
+            { "name": "nie-liczba-skonczona", "valid": false, "probes@expr": ["NaN", "Infinity", "-Infinity"], "raises": "TypeError" },
+            { "name": "zero-lub-ujemna", "valid": false, "probes": [0, -0.01, -1, -100], "probes@expr": ["-0"], "raises": "RangeError", "note": "-0 <= 0 jest prawdziwe, wiec -0 tez jest odrzucone" },
+            { "name": "lekka", "valid": true, "probes": [0.01, 1, 5, 9.99, 10], "probes@expr": ["Number.MIN_VALUE"] },
+            { "name": "srednia", "valid": true, "probes": [10.0001, 10.5, 15, 29.99, 30] },
+            { "name": "ciezka", "valid": true, "probes": [30.0001, 50, 99.99, 100] },
+            { "name": "ponad-limit", "valid": false, "probes": [100.0001, 101, 1000], "raises": "RangeError" }
+          ],
+          "boundaryValues": [0, 0.01, 10, 10.0001, 30, 30.0001, 100, 100.0001],
+          "boundaryValues@expr": ["Number.MIN_VALUE", "-0", "NaN", "Infinity", "-Infinity"]
+        },
+        "zone": {
+          "type": "string",
+          "hasRequiredTextFormat": false,
+          "formatNote": "Parametr NIE ma wymaganego formatu tekstowego: SPEC dopuszcza `dowolna inna wartosc` i mapuje ja na stawke 79.00 PLN, wiec zadna wartosc string nie jest bledna. Typ `Zone = \"PL\" | \"EU\" | \"WORLD\"` w src/pricing.ts:1 jest tylko podpowiedzia kompilatora - sygnatura funkcji przyjmuje `string`.",
+          "allowedRange": "dowolny string",
+          "significantValues": ["PL", "EU", "WORLD"],
+          "fallbackValue": "kazdy string rozny od \"PL\" i \"EU\"",
+          "equivalenceClasses": [
+            { "name": "strefa-krajowa", "probes": ["PL"], "baseRate": 12 },
+            { "name": "strefa-unijna", "probes": ["EU"], "baseRate": 29 },
+            { "name": "strefa-pozostala", "probes": ["WORLD", "US", "pl", "eu", "PL ", " PL", "Pl", "", "PLN", "EUR", "🇵🇱"], "baseRate": 79 }
+          ]
+        },
+        "isPremium": {
+          "type": "boolean",
+          "hasRequiredTextFormat": false,
+          "allowedRange": [true, false],
+          "description": "Rabat 20% stosowany tylko dla dokladnie `true` (SPEC mowi `isPremium === true`).",
+          "boundaryValues": [true, false]
+        }
+      },
+
+      "errors": [
+        {
+          "type": "TypeError",
+          "message": "weight must be a finite number",
+          "condition": "Number.isFinite(weightKg) === false",
+          "specSection": "Sekcja 1 / Walidacja wejscia",
+          "triggers@expr": ["NaN", "Infinity", "-Infinity"],
+          "precedence": 1
+        },
+        {
+          "type": "RangeError",
+          "message": "weight must be positive",
+          "condition": "weightKg <= 0",
+          "specSection": "Sekcja 1 / Walidacja wejscia",
+          "triggers": [0, -0.01, -1, -100],
+          "triggers@expr": ["-0"],
+          "precedence": 2
+        },
+        {
+          "type": "RangeError",
+          "message": "weight above carrier limit",
+          "condition": "weightKg > 100",
+          "specSection": "Sekcja 1 / Walidacja wejscia",
+          "triggers": [100.0001, 101, 1e6],
+          "precedence": 3
+        }
+      ],
+      "errorPrecedenceNote": "Walidacja jest sekwencyjna: TypeError (skonczonosc) przed RangeError (znak) przed RangeError (limit). `zone` i `isPremium` nie sa nigdy walidowane - nie ma dla nich zadnego bledu.",
+
+      "statefulSequences": [],
+      "specVsCode": [
+        { "verdict": "zgodne", "note": "src/pricing.ts implementuje sekcje 1 bez rozbieznosci wobec SPEC 1.4." }
+      ]
+    },
+
+    {
+      "module": "src/invoiceId.ts",
+      "function": "parseInvoiceId",
+      "kind": "pure-function",
+      "signature": "parseInvoiceId(raw: string): { year: number; month: number; seq: number }",
+      "returns": {
+        "type": "object",
+        "fields": {
+          "year": { "type": "integer", "range": [2000, 2100] },
+          "month": { "type": "integer", "range": [1, 12], "note": "bez wiodacego zera - \"09\" -> 9" },
+          "seq": { "type": "integer", "range": [1, 9999], "note": "bez wiodacych zer - \"0042\" -> 42" }
+        }
+      },
+
+      "rules": [
+        {
+          "id": "INV-R1",
+          "rule": "Identyfikator ma postac FV/RRRR/MM/NNNN: staly prefiks \"FV\", rok jako dokladnie 4 cyfry, miesiac jako dokladnie 2 cyfry z zakresu 01-12, numer kolejny jako dokladnie 4 cyfry. Separatorem jest ukosnik.",
+          "specSection": "Sekcja 2: Identyfikator faktury / Format",
+          "boundaries": [
+            { "input": { "raw": "FV/2026/09/0042" }, "expectedPerSpec": { "year": 2026, "month": 9, "seq": 42 }, "note": "przyklad kanoniczny ze SPEC" },
+            { "input": { "raw": "FV/2026/01/0001" }, "expectedPerSpec": { "year": 2026, "month": 1, "seq": 1 }, "note": "dolna granica miesiaca i numeru" },
+            { "input": { "raw": "FV/2026/12/9999" }, "expectedPerSpec": { "year": 2026, "month": 12, "seq": 9999 }, "note": "gorna granica miesiaca i numeru" },
+            { "input": { "raw": "FV/2026/00/0001" }, "raises": "Error: malformed invoice id", "note": "miesiac 00 - ponizej dolnej granicy" },
+            { "input": { "raw": "FV/2026/13/0001" }, "raises": "Error: malformed invoice id", "note": "miesiac 13 - powyzej gornej granicy" },
+            { "input": { "raw": "FV/2026/9/0042" }, "raises": "Error: malformed invoice id", "note": "miesiac 1-cyfrowy - `dokladnie dwie cyfry`" },
+            { "input": { "raw": "FV/2026/009/0042" }, "raises": "Error: malformed invoice id", "note": "miesiac 3-cyfrowy" },
+            { "input": { "raw": "FV/2026/09/042" }, "raises": "Error: malformed invoice id", "note": "numer 3-cyfrowy - `dokladnie cztery cyfry`" },
+            { "input": { "raw": "FV/2026/09/00042" }, "raises": "Error: malformed invoice id", "note": "numer 5-cyfrowy" },
+            { "input": { "raw": "FV/26/09/0042" }, "raises": "Error: malformed invoice id", "note": "rok 2-cyfrowy" }
+          ]
+        },
+        {
+          "id": "INV-R2",
+          "rule": "Biale znaki na poczatku i koncu wartosci sa ignorowane (trim). Biale znaki WEWNATRZ identyfikatora nie sa dopuszczalne.",
+          "specSection": "Sekcja 2: Identyfikator faktury / Format",
+          "boundaries": [
+            { "input": { "raw": "  FV/2026/09/0042  " }, "expectedPerSpec": { "year": 2026, "month": 9, "seq": 42 }, "note": "spacje z obu stron" },
+            { "input": { "raw": "\tFV/2026/09/0042\n" }, "expectedPerSpec": { "year": 2026, "month": 9, "seq": 42 }, "note": "tab i newline tez sa trimowane" },
+            { "input": { "raw": "FV /2026/09/0042" }, "raises": "Error: malformed invoice id", "note": "spacja wewnatrz" },
+            { "input": { "raw": "FV/2026/09/00 42" }, "raises": "Error: malformed invoice id", "note": "spacja wewnatrz numeru" },
+            { "input": { "raw": "   " }, "raises": "Error: malformed invoice id", "note": "same biale znaki -> po trim pusty string" }
+          ]
+        },
+        {
+          "id": "INV-R3",
+          "rule": "Rok musi lezec w zakresie 2000-2100 wlacznie. Rok skladniowo poprawny (4 cyfry) ale poza zakresem daje RangeError, nie Error.",
+          "specSection": "Sekcja 2: Identyfikator faktury / Walidacja",
+          "boundaries": [
+            { "input": { "raw": "FV/1999/12/0001" }, "raises": "RangeError: year out of supported range", "note": "rok - 1 od dolnej granicy" },
+            { "input": { "raw": "FV/2000/01/0001" }, "expectedPerSpec": { "year": 2000, "month": 1, "seq": 1 }, "note": "dolna granica wlacznie" },
+            { "input": { "raw": "FV/2100/12/9999" }, "expectedPerSpec": { "year": 2100, "month": 12, "seq": 9999 }, "note": "gorna granica wlacznie" },
+            { "input": { "raw": "FV/2101/01/0001" }, "raises": "RangeError: year out of supported range", "note": "rok + 1 od gornej granicy" },
+            { "input": { "raw": "FV/0000/01/0001" }, "raises": "RangeError: year out of supported range", "note": "skrajnie niski rok 4-cyfrowy" },
+            { "input": { "raw": "FV/9999/12/9999" }, "raises": "RangeError: year out of supported range", "note": "skrajnie wysoki rok 4-cyfrowy" }
+          ]
+        },
+        {
+          "id": "INV-R4",
+          "rule": "Numer kolejny rowny 0000 jest niedopuszczalny (RangeError). Najmniejszy dopuszczalny numer to 0001.",
+          "specSection": "Sekcja 2: Identyfikator faktury / Walidacja",
+          "boundaries": [
+            { "input": { "raw": "FV/2026/09/0000" }, "raises": "RangeError: sequence number must not be zero" },
+            { "input": { "raw": "FV/2026/09/0001" }, "expectedPerSpec": { "year": 2026, "month": 9, "seq": 1 }, "note": "pierwsza dopuszczalna wartosc" }
+          ]
+        },
+        {
+          "id": "INV-R5",
+          "rule": "Wynik zwraca year, month i seq jako liczby calkowite bez wiodacych zer (parsowanie dziesietne, nie oktalne).",
+          "specSection": "Sekcja 2: Identyfikator faktury / Wynik",
+          "boundaries": [
+            { "input": { "raw": "FV/2026/09/0042" }, "expectedPerSpec": { "year": 2026, "month": 9, "seq": 42 }, "note": "\"09\" -> 9 (nie 0o9 / NaN), \"0042\" -> 42" },
+            { "input": { "raw": "FV/2026/08/0008" }, "expectedPerSpec": { "year": 2026, "month": 8, "seq": 8 }, "note": "\"08\" i \"0008\" - cyfry, ktore w notacji oktalnej byly by bledne" },
+            { "input": { "raw": "FV/2026/10/0100" }, "expectedPerSpec": { "year": 2026, "month": 10, "seq": 100 }, "note": "zero w srodku liczby" }
+          ],
+          "invariant": "Number.isInteger(r.year) && Number.isInteger(r.month) && Number.isInteger(r.seq)"
+        }
+      ],
+
+      "inputDomains": {
+        "raw": {
+          "type": "string",
+          "hasRequiredTextFormat": true,
+          "pattern": "^\\s*FV/(\\d{4})/(0[1-9]|1[0-2])/(\\d{4})\\s*$",
+          "patternNote": "Wzorzec obejmuje trim. Sam kod dopasowuje `^FV\\/(\\d{4})\\/(0[1-9]|1[0-2])\\/(\\d{4})$` do `raw.trim()` (src/invoiceId.ts:16). Dopasowanie wzorca to warunek KONIECZNY, nie wystarczajacy - po nim jeszcze obowiazuja INV-R3 (rok 2000-2100) i INV-R4 (numer != 0000).",
+          "patternFullyValid": "^\\s*FV/(20(0\\d|[1-9]\\d)|2100)/(0[1-9]|1[0-2])/(?!0000)(\\d{4})\\s*$",
+          "patternFullyValidNote": "Wzorzec wartosci, ktore przechodza CALA walidacje (format + zakres roku + niezerowy numer) - tego wzorca powinien uzyc generator do produkcji wejsc pozytywnych.",
+          "digitsNote": "`\\d` w tym wyrazeniu jest ASCII-only (brak flagi `u`), wiec cyfry innych systemow pisma (np. arabsko-indyjskie \"٢٠٢٦\") NIE pasuja i daja `Error: malformed invoice id`.",
+          "caseSensitive": true,
+          "validExamples": [
+            "FV/2026/09/0042",
+            "FV/2000/01/0001",
+            "FV/2100/12/9999",
+            "  FV/2026/09/0042  ",
+            "FV/2026/08/0008",
+            "FV/2050/10/0100",
+            "\tFV/2099/11/1234\n"
+          ],
+          "invalidExamples": [
+            { "value": "fv/2026/09/0042", "reason": "prefiks malymi literami - prefiks \"FV\" jest staly i case-sensitive", "raises": "Error: malformed invoice id" },
+            { "value": "FV-2026-09-0042", "reason": "myslnik zamiast ukosnika", "raises": "Error: malformed invoice id" },
+            { "value": "FV/2026/09/0042/1", "reason": "nadmiarowy segment na koncu", "raises": "Error: malformed invoice id" },
+            { "value": "FV/2026/9/0042", "reason": "miesiac jednocyfrowy", "raises": "Error: malformed invoice id" },
+            { "value": "FV/2026/13/0001", "reason": "miesiac poza 01-12", "raises": "Error: malformed invoice id" },
+            { "value": "FV/2026/09/042", "reason": "numer trzycyfrowy", "raises": "Error: malformed invoice id" },
+            { "value": "", "reason": "pusty string", "raises": "Error: malformed invoice id" },
+            { "value": "FV/2026/09/00A2", "reason": "litera w numerze kolejnym", "raises": "Error: malformed invoice id" },
+            { "value": "FV/1999/12/0001", "reason": "format poprawny, rok ponizej 2000", "raises": "RangeError: year out of supported range" },
+            { "value": "FV/2101/01/0001", "reason": "format poprawny, rok powyzej 2100", "raises": "RangeError: year out of supported range" },
+            { "value": "FV/2026/09/0000", "reason": "format poprawny, numer kolejny zerowy", "raises": "RangeError: sequence number must not be zero" }
+          ],
+          "nonStringProbes@expr": ["null", "undefined", "42", "{}", "[]", "true", "Symbol('FV/2026/09/0042')"],
+          "nonStringProbesRaises": "TypeError: invoice id must be a string"
+        }
+      },
+
+      "errors": [
+        {
+          "type": "TypeError",
+          "message": "invoice id must be a string",
+          "condition": "typeof raw !== \"string\"",
+          "specSection": "Sekcja 2 / Walidacja",
+          "triggers@expr": ["null", "undefined", "42", "{}", "['FV/2026/09/0042']", "new String('FV/2026/09/0042')"],
+          "precedence": 1,
+          "note": "Obiekt `new String(...)` ma typeof \"object\", wiec tez daje TypeError, mimo ze `.trim()` by zadzialal."
+        },
+        {
+          "type": "Error",
+          "message": "malformed invoice id",
+          "condition": "raw.trim() nie pasuje do wzorca formatu",
+          "specSection": "Sekcja 2 / Walidacja",
+          "triggers": ["", "   ", "FV/2026/9/0042", "FV/2026/13/0001", "fv/2026/09/0042", "FV-2026-09-0042", "FV/2026/09/00A2"],
+          "precedence": 2
+        },
+        {
+          "type": "RangeError",
+          "message": "year out of supported range",
+          "condition": "year < 2000 || year > 2100 (sprawdzane dopiero po dopasowaniu formatu)",
+          "specSection": "Sekcja 2 / Walidacja",
+          "triggers": ["FV/1999/12/0001", "FV/2101/01/0001", "FV/0000/01/0001", "FV/9999/12/9999"],
+          "precedence": 3
+        },
+        {
+          "type": "RangeError",
+          "message": "sequence number must not be zero",
+          "condition": "seq === 0 (sprawdzane dopiero po dopasowaniu formatu i walidacji roku)",
+          "specSection": "Sekcja 2 / Walidacja",
+          "triggers": ["FV/2026/09/0000", "FV/2000/01/0000"],
+          "precedence": 4
+        }
+      ],
+      "errorPrecedenceNote": "Kolejnosc walidacji jest istotna dla oracle: typ -> format -> rok -> numer. Wejscie z wieloma bledami zglasza tylko pierwszy: \"FV/1999/13/0000\" -> `Error: malformed invoice id` (nie RangeError), a \"FV/1999/12/0000\" -> `RangeError: year out of supported range` (nie blad numeru).",
+
+      "statefulSequences": [],
+      "specVsCode": [
+        { "verdict": "zgodne", "note": "src/invoiceId.ts implementuje sekcje 2 bez rozbieznosci wobec SPEC 1.4." }
+      ]
+    },
+
+    {
+      "module": "src/loyalty.ts",
+      "function": "awardPoints",
+      "kind": "pure-function",
+      "signature": "awardPoints(orderValuePLN: number, lifetimeSpendPLN: number): number",
+      "returns": {
+        "type": "integer",
+        "unit": "punkty lojalnosciowe",
+        "range": [0, 5000],
+        "invariant": "Number.isInteger(result) && result >= 0 && result <= 5000"
+      },
+
+      "rules": [
+        {
+          "id": "LOY-R1",
+          "rule": "Klient otrzymuje 1 punkt za kazde 10 zlotych wartosci zamowienia: punkty = round_half_to_even(orderValuePLN / 10). Zaokraglenie jest BANKIERSKIE - do najblizszej liczby calkowitej, a przy dokladnej polowie do liczby PARZYSTEJ.",
+          "specSection": "Sekcja 3: Punkty lojalnosciowe / Przelicznik",
+          "boundaries": [
+            { "input": { "orderValuePLN": 0, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 0, "currentCodeBehavior": 0, "note": "dolna granica domeny" },
+            { "input": { "orderValuePLN": 4.9, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 0, "currentCodeBehavior": 0, "note": "0.49 -> 0" },
+            { "input": { "orderValuePLN": 5, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 0, "currentCodeBehavior": 0, "note": "0.5 -> 0 bo 0 jest parzyste (bankierskie); half-up dalby 1" },
+            { "input": { "orderValuePLN": 9.99, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 1, "currentCodeBehavior": 0, "note": "0.999 -> 1; ROZBIEZNOSC: kod uzywa Math.floor" },
+            { "input": { "orderValuePLN": 15, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 2, "currentCodeBehavior": 1, "note": "1.5 -> 2 (parzyste); ROZBIEZNOSC" },
+            { "input": { "orderValuePLN": 24, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 2, "currentCodeBehavior": 2, "note": "2.4 -> 2 (przyklad ze SPEC)" },
+            { "input": { "orderValuePLN": 25, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 2, "currentCodeBehavior": 2, "note": "2.5 -> 2 (przyklad ze SPEC, parzyste)" },
+            { "input": { "orderValuePLN": 26, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 3, "currentCodeBehavior": 2, "note": "2.6 -> 3 (przyklad ze SPEC); ROZBIEZNOSC" },
+            { "input": { "orderValuePLN": 35, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 4, "currentCodeBehavior": 3, "note": "3.5 -> 4 (przyklad ze SPEC, parzyste); ROZBIEZNOSC - to najostrzejszy test bankierskiego zaokraglenia" },
+            { "input": { "orderValuePLN": 45, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 4, "currentCodeBehavior": 4, "note": "4.5 -> 4 (parzyste); half-up dalby 5" },
+            { "input": { "orderValuePLN": 10, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 1, "currentCodeBehavior": 1, "note": "dokladna wielokrotnosc 10" }
+          ],
+          "roundingMode": "half-to-even (banker's rounding)",
+          "roundingTieProbes": [5, 15, 25, 35, 45, 55, 105, 115],
+          "roundingTieExpectedPerSpec": [0, 2, 2, 4, 4, 6, 10, 12]
+        },
+        {
+          "id": "LOY-R2",
+          "rule": "Klient, ktorego lifetimeSpendPLN wynosi CO NAJMNIEJ 5000 zlotych, jest klientem VIP i otrzymuje podwojona liczbe punktow. Prog jest domkniety (>=), nie ostry (>).",
+          "specSection": "Sekcja 3: Punkty lojalnosciowe / Mnoznik VIP",
+          "boundaries": [
+            { "input": { "orderValuePLN": 100, "lifetimeSpendPLN": 4999.99 }, "expectedPerSpec": 10, "currentCodeBehavior": 10, "note": "ponizej progu - brak mnoznika" },
+            { "input": { "orderValuePLN": 100, "lifetimeSpendPLN": 5000 }, "expectedPerSpec": 20, "currentCodeBehavior": 10, "note": "DOKLADNIE na progu - VIP wg SPEC; ROZBIEZNOSC: kod uzywa `>` (src/loyalty.ts:21), wiec nie przyznaje mnoznika" },
+            { "input": { "orderValuePLN": 100, "lifetimeSpendPLN": 5000.01 }, "expectedPerSpec": 20, "currentCodeBehavior": 20, "note": "powyzej progu - VIP w obu wariantach" },
+            { "input": { "orderValuePLN": 100, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 10, "currentCodeBehavior": 10, "note": "nowy klient" }
+          ]
+        },
+        {
+          "id": "LOY-R3",
+          "rule": "Za jedno zamowienie mozna otrzymac maksymalnie 5000 punktow. Limit stosuje sie PO naliczeniu mnoznika VIP (nie przed).",
+          "specSection": "Sekcja 3: Punkty lojalnosciowe / Limit",
+          "boundaries": [
+            { "input": { "orderValuePLN": 49990, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 4999, "currentCodeBehavior": 4999, "note": "punkt pod limitem" },
+            { "input": { "orderValuePLN": 50000, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 5000, "currentCodeBehavior": 5000, "note": "DOKLADNIE na limicie - nie obcinane (warunek to `points > 5000`)" },
+            { "input": { "orderValuePLN": 50010, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 5000, "currentCodeBehavior": 5000, "note": "5001 -> obciete do 5000" },
+            { "input": { "orderValuePLN": 1e9, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 5000, "currentCodeBehavior": 5000, "note": "skrajnie duza kwota - limit trzyma" },
+            { "input": { "orderValuePLN": 25000, "lifetimeSpendPLN": 6000 }, "expectedPerSpec": 5000, "currentCodeBehavior": 5000, "note": "2500 * 2 = 5000 - VIP dokladnie na limicie" },
+            { "input": { "orderValuePLN": 25010, "lifetimeSpendPLN": 6000 }, "expectedPerSpec": 5000, "currentCodeBehavior": 5000, "note": "2501 * 2 = 5002 -> obciete" },
+            { "input": { "orderValuePLN": 30000, "lifetimeSpendPLN": 6000 }, "expectedPerSpec": 5000, "currentCodeBehavior": 5000, "note": "3000 punktow bazowo (pod limitem), 6000 po VIP -> obciete. Test kolejnosci: limit PO mnozniku, nie przed - przy odwrotnej kolejnosci wynik bylby 6000." },
+            { "input": { "orderValuePLN": 40000, "lifetimeSpendPLN": 4999.99 }, "expectedPerSpec": 4000, "currentCodeBehavior": 4000, "note": "kontrola do poprzedniego: bez VIP ta sama kwota nie dobija do limitu" }
+          ],
+          "capBoundaryInPointsSpace": { "notClamped": 5000, "clamped": 5001 }
+        }
+      ],
+
+      "inputDomains": {
+        "orderValuePLN": {
+          "type": "number",
+          "hasRequiredTextFormat": false,
+          "allowedRange": { "min": 0, "minInclusive": true, "max": "Number.MAX_VALUE", "maxInclusive": true },
+          "description": "Wartosc zamowienia w zlotych. Skonczona liczba nieujemna. Moze byc ulamkowa (grosze).",
+          "equivalenceClasses": [
+            { "name": "nie-liczba-skonczona", "valid": false, "probes@expr": ["NaN", "Infinity", "-Infinity"], "raises": "TypeError" },
+            { "name": "ujemna", "valid": false, "probes": [-0.01, -1, -5000], "raises": "RangeError" },
+            { "name": "zero", "valid": true, "probes": [0], "probes@expr": ["-0"], "note": "-0 < 0 jest falszem, wiec -0 przechodzi walidacje i daje 0 punktow" },
+            { "name": "ponizej-jednego-punktu", "valid": true, "probes": [0.01, 4.9, 5, 9.99] },
+            { "name": "typowa", "valid": true, "probes": [10, 15, 24, 25, 26, 35, 99.99, 1234.56] },
+            { "name": "przy-limicie", "valid": true, "probes": [49990, 50000, 50010] },
+            { "name": "skrajnie-duza", "valid": true, "probes": [1e9], "probes@expr": ["Number.MAX_SAFE_INTEGER", "Number.MAX_VALUE"] }
+          ],
+          "boundaryValues": [0, 0.01, 5, 9.99, 10, 15, 25, 35, 45, 49990, 50000, 50010, -0.01],
+          "boundaryValues@expr": ["-0", "NaN", "Infinity", "-Infinity"]
+        },
+        "lifetimeSpendPLN": {
+          "type": "number",
+          "hasRequiredTextFormat": false,
+          "allowedRange": { "min": 0, "minInclusive": true, "max": "Number.MAX_VALUE", "maxInclusive": true },
+          "description": "Suma dotychczasowych zakupow klienta w zlotych. Skonczona liczba nieujemna. Jedyna rola: prog VIP 5000 PLN.",
+          "equivalenceClasses": [
+            { "name": "nie-liczba-skonczona", "valid": false, "probes@expr": ["NaN", "Infinity", "-Infinity"], "raises": "TypeError" },
+            { "name": "ujemna", "valid": false, "probes": [-0.01, -1], "raises": "RangeError" },
+            { "name": "nie-vip", "valid": true, "probes": [0, 1, 2500, 4999, 4999.99] },
+            { "name": "vip-na-progu", "valid": true, "probes": [5000], "note": "wg SPEC nalezy do klasy VIP" },
+            { "name": "vip", "valid": true, "probes": [5000.01, 10000, 1e9] }
+          ],
+          "boundaryValues": [0, 4999.99, 5000, 5000.01, -0.01],
+          "boundaryValues@expr": ["-0", "NaN", "Infinity", "-Infinity"]
+        }
+      },
+
+      "errors": [
+        {
+          "type": "TypeError",
+          "message": "amounts must be finite numbers",
+          "condition": "!Number.isFinite(orderValuePLN) || !Number.isFinite(lifetimeSpendPLN)",
+          "specSection": "Sekcja 3 / Walidacja",
+          "triggers@expr": [
+            "[NaN, 0]", "[0, NaN]", "[NaN, NaN]",
+            "[Infinity, 0]", "[0, Infinity]",
+            "[-Infinity, 0]", "[0, -Infinity]"
+          ],
+          "precedence": 1,
+          "note": "TypeError ma pierwszenstwo nad RangeError: [-Infinity, 0] daje TypeError, mimo ze wartosc jest tez ujemna."
+        },
+        {
+          "type": "RangeError",
+          "message": "amounts must not be negative",
+          "condition": "orderValuePLN < 0 || lifetimeSpendPLN < 0",
+          "specSection": "Sekcja 3 / Walidacja",
+          "triggers": [[-0.01, 0], [0, -0.01], [-1, -1], [-5000, 6000]],
+          "precedence": 2
+        }
+      ],
+      "errorPrecedenceNote": "Walidacja obu argumentow jest zbiorcza (jeden komunikat na oba parametry). Kolejnosc: skonczonosc obu -> znak obu.",
+
+      "statefulSequences": [],
+      "specVsCode": [
+        {
+          "verdict": "rozbieznosc",
+          "id": "DIV-LOY-1",
+          "rule": "LOY-R1",
+          "specSection": "Sekcja 3 / Przelicznik",
+          "intended": "round_half_to_even(orderValuePLN / 10)",
+          "actual": "Math.floor(orderValuePLN / 10) - src/loyalty.ts:19",
+          "witness": { "input": { "orderValuePLN": 35, "lifetimeSpendPLN": 0 }, "expectedPerSpec": 4, "currentCodeBehavior": 3 },
+          "impact": "Kod systematycznie zaniza punkty dla kazdej kwoty niebedacej wielokrotnoscia 10. Nie da sie tego wykryc testem, ktory uzywa wylacznie wielokrotnosci 10."
+        },
+        {
+          "verdict": "rozbieznosc",
+          "id": "DIV-LOY-2",
+          "rule": "LOY-R2",
+          "specSection": "Sekcja 3 / Mnoznik VIP",
+          "intended": "lifetimeSpendPLN >= 5000 (co najmniej)",
+          "actual": "lifetimeSpendPLN > 5000 - src/loyalty.ts:21",
+          "witness": { "input": { "orderValuePLN": 100, "lifetimeSpendPLN": 5000 }, "expectedPerSpec": 20, "currentCodeBehavior": 10 },
+          "impact": "Klient dokladnie na progu VIP nie dostaje mnoznika. Off-by-one wykrywalny tylko przez wejscie o wartosci dokladnie 5000."
+        }
+      ]
+    },
+
+    {
+      "module": "src/cart.ts",
+      "class": "Cart",
+      "function": "Cart.add",
+      "kind": "class-method",
+      "signature": "add(sku: string, priceGrosz: number, qty: number): void",
+      "returns": { "type": "void", "effect": "mutuje prywatny stan `lines`" },
+
+      "rules": [
+        {
+          "id": "CART-ADD-R1",
+          "rule": "priceGrosz musi byc calkowita liczba nieujemna wyrazona w groszach. Zero jest dopuszczalne (pozycja gratisowa).",
+          "specSection": "Sekcja 4: Koszyk zakupowy / add(sku, priceGrosz, qty)",
+          "boundaries": [
+            { "input": { "sku": "SKU-1", "priceGrosz": 0, "qty": 1 }, "expectedPerSpec": "ok", "note": "dolna dopuszczalna cena - pozycja za 0 gr" },
+            { "input": { "sku": "SKU-1", "priceGrosz": -1, "qty": 1 }, "raises": "RangeError: price must be a non-negative integer of grosz", "note": "pierwsza wartosc ponizej granicy" },
+            { "input": { "sku": "SKU-1", "priceGrosz": 0.5, "qty": 1 }, "raises": "RangeError: price must be a non-negative integer of grosz", "note": "ulamek grosza" },
+            { "input": { "sku": "SKU-1", "priceGrosz": 1.0, "qty": 1 }, "expectedPerSpec": "ok", "note": "1.0 jest calkowite w IEEE754 - musi przejsc" },
+            { "input": { "sku": "SKU-1", "priceGrosz": 1, "qty": 1 }, "expectedPerSpec": "ok", "note": "najmniejsza dodatnia cena" }
+          ]
+        },
+        {
+          "id": "CART-ADD-R2",
+          "rule": "qty musi byc calkowita liczba dodatnia. Zero i wartosci ujemne sa odrzucane.",
+          "specSection": "Sekcja 4: Koszyk zakupowy / add(sku, priceGrosz, qty)",
+          "boundaries": [
+            { "input": { "sku": "SKU-1", "priceGrosz": 100, "qty": 1 }, "expectedPerSpec": "ok", "note": "dolna dopuszczalna ilosc" },
+            { "input": { "sku": "SKU-1", "priceGrosz": 100, "qty": 0 }, "raises": "RangeError: quantity must be a positive integer", "note": "granica - 0 jest odrzucone (inaczej niz przy cenie)" },
+            { "input": { "sku": "SKU-1", "priceGrosz": 100, "qty": -1 }, "raises": "RangeError: quantity must be a positive integer" },
+            { "input": { "sku": "SKU-1", "priceGrosz": 100, "qty": 1.5 }, "raises": "RangeError: quantity must be a positive integer" }
+          ]
+        },
+        {
+          "id": "CART-ADD-R3",
+          "rule": "Dodanie SKU, ktore jest juz w koszyku, sumuje ilosci (nie tworzy drugiej pozycji). Dopasowanie SKU jest dokladne (===) i case-sensitive.",
+          "specSection": "Sekcja 4: Koszyk zakupowy / add(sku, priceGrosz, qty)",
+          "boundaries": [
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 2 } },
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 3 } },
+                { "call": "total", "expectedPerSpec": 5000 }
+              ],
+              "note": "ten sam SKU, ta sama cena - 5 sztuk x 1000 gr"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "add", "args": { "sku": "SKU-2", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "total", "expectedPerSpec": 2000 }
+              ],
+              "note": "rozne SKU - dwie osobne pozycje"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "add", "args": { "sku": "sku-1", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "total", "expectedPerSpec": 2000 }
+              ],
+              "note": "case-sensitive - \"sku-1\" to inne SKU niz \"SKU-1\""
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 2000, "qty": 1 } },
+                { "call": "total", "currentCodeBehavior": 2000, "expectedPerSpec": "NIEOKRESLONE" }
+              ],
+              "note": "LUKA W SPEC (patrz specVsCode DIV-CART-3): ten sam SKU dodany z INNA cena. Kod zachowuje cene z pierwszego add (2 x 1000 = 2000) i cicho ignoruje 2000 gr. SPEC mowi tylko `sumuje ilosci` i nie rozstrzyga losu ceny. Generator nie powinien traktowac 2000 jako oracle."
+            }
+          ]
+        }
+      ],
+
+      "inputDomains": {
+        "sku": {
+          "type": "string",
+          "hasRequiredTextFormat": false,
+          "formatNote": "SPEC nie definiuje zadnego formatu SKU ani nie przewiduje bledu dla SKU - `add` nie waliduje tego parametru w ogole. SKU jest wylacznie kluczem tozsamosci pozycji, porownywanym przez `===` (src/cart.ts:28). Dlatego nie podaje sie tu wzorca ani przykladow niepoprawnych - kazdy string jest poprawny.",
+          "allowedRange": "dowolny string",
+          "identityRole": "klucz laczacy wywolania add/remove w sekwencji - patrz statefulSequences.sharedArguments",
+          "representativeValues": ["SKU-1", "SKU-2", "ABC-123", "a", "", "sku-1", "SKU 1", "SKU/1", "🛒"],
+          "collisionProbePairs": [
+            { "a": "SKU-1", "b": "SKU-1", "sameLine": true },
+            { "a": "SKU-1", "b": "sku-1", "sameLine": false, "note": "rozna wielkosc liter" },
+            { "a": "SKU-1", "b": "SKU-1 ", "sameLine": false, "note": "brak trim - spacja konczaca tworzy nowa pozycje" },
+            { "a": "", "b": "", "sameLine": true, "note": "pusty SKU jest legalnym, spojnym kluczem" }
+          ]
+        },
+        "priceGrosz": {
+          "type": "integer",
+          "unit": "grosz",
+          "hasRequiredTextFormat": false,
+          "allowedRange": { "min": 0, "minInclusive": true, "max": "Number.MAX_SAFE_INTEGER", "maxInclusive": true },
+          "equivalenceClasses": [
+            { "name": "ujemna", "valid": false, "probes": [-1, -100], "probes@expr": ["-0"], "raises": "RangeError", "note": "-0: Number.isInteger(-0) jest true, a -0 < 0 jest false, wiec -0 PRZECHODZI walidacje (klasa `zero`)" },
+            { "name": "nie-calkowita", "valid": false, "probes": [0.5, 1.01, 99.999], "probes@expr": ["NaN", "Infinity", "-Infinity"], "raises": "RangeError" },
+            { "name": "zero", "valid": true, "probes": [0], "probes@expr": ["-0"] },
+            { "name": "typowa", "valid": true, "probes": [1, 99, 100, 1000, 1999, 12345] },
+            { "name": "skrajnie-duza", "valid": true, "probes@expr": ["Number.MAX_SAFE_INTEGER"], "note": "przy duzych cenach i ilosciach `priceGrosz * qty` przekracza zakres bezpiecznych liczb calkowitych - patrz DIV-CART-4" }
+          ],
+          "boundaryValues": [-1, 0, 1, 0.5, 1999],
+          "boundaryValues@expr": ["-0", "NaN", "Infinity", "Number.MAX_SAFE_INTEGER"]
+        },
+        "qty": {
+          "type": "integer",
+          "unit": "sztuki",
+          "hasRequiredTextFormat": false,
+          "allowedRange": { "min": 1, "minInclusive": true, "max": "Number.MAX_SAFE_INTEGER", "maxInclusive": true },
+          "equivalenceClasses": [
+            { "name": "niedodatnia", "valid": false, "probes": [0, -1, -10], "probes@expr": ["-0"], "raises": "RangeError" },
+            { "name": "nie-calkowita", "valid": false, "probes": [1.5, 0.9, 2.0001], "probes@expr": ["NaN", "Infinity"], "raises": "RangeError" },
+            { "name": "typowa", "valid": true, "probes": [1, 2, 3, 10, 100] },
+            { "name": "skrajnie-duza", "valid": true, "probes": [1000000], "probes@expr": ["Number.MAX_SAFE_INTEGER"] }
+          ],
+          "boundaryValues": [-1, 0, 1, 2, 1.5],
+          "boundaryValues@expr": ["-0", "NaN", "Infinity", "Number.MAX_SAFE_INTEGER"]
+        }
+      },
+
+      "errors": [
+        {
+          "type": "RangeError",
+          "message": "price must be a non-negative integer of grosz",
+          "condition": "!Number.isInteger(priceGrosz) || priceGrosz < 0",
+          "specSection": "Sekcja 4 / add",
+          "triggers": [-1, 0.5, 1.01],
+          "triggers@expr": ["NaN", "Infinity", "-Infinity"],
+          "precedence": 1
+        },
+        {
+          "type": "RangeError",
+          "message": "quantity must be a positive integer",
+          "condition": "!Number.isInteger(qty) || qty <= 0",
+          "specSection": "Sekcja 4 / add",
+          "triggers": [0, -1, 1.5],
+          "triggers@expr": ["NaN", "Infinity"],
+          "precedence": 2
+        }
+      ],
+      "errorPrecedenceNote": "Cena walidowana przed ilescia: add(\"S\", -1, 0) zglasza blad CENY, nie ilosci. Zaden blad walidacji nie zmienia stanu koszyka (walidacja przed mutacja) - to jest testowalny warunek: nieudany add nie moze zmienic total().",
+
+      "statefulSequences": [
+        {
+          "id": "SEQ-ADD-1",
+          "name": "akumulacja tego samego SKU",
+          "calls": ["add", "add", "total"],
+          "sharedArguments": ["sku"],
+          "sharedArgumentsNote": "Oba wywolania `add` MUSZA uzyc identycznego stringa `sku` - inaczej testowana jest zla galaz (nowa pozycja zamiast sumowania ilosci).",
+          "businessMeaning": "Klient dodaje ten sam produkt dwa razy - koszyk pokazuje jedna pozycje ze zsumowana ilescia.",
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 2] },
+            { "call": "add", "args": ["SKU-1", 1000, 3] },
+            { "call": "total", "expectedPerSpec": 5000 }
+          ]
+        },
+        {
+          "id": "SEQ-ADD-2",
+          "name": "nieudany add nie mutuje koszyka",
+          "calls": ["add", "add(bledny)", "total"],
+          "sharedArguments": ["sku"],
+          "sharedArgumentsNote": "Bledny `add` musi celowac w TEN SAM `sku`, zeby udowodnic, ze nie dopisal ilosci do istniejacej pozycji.",
+          "businessMeaning": "Odrzucone dodanie do koszyka jest atomowe - klient nie widzi czesciowego skutku.",
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 2] },
+            { "call": "add", "args": ["SKU-1", 1000, 0], "raises": "RangeError: quantity must be a positive integer" },
+            { "call": "total", "expectedPerSpec": 2000 }
+          ]
+        }
+      ],
+
+      "specVsCode": [
+        { "verdict": "zgodne", "note": "Walidacja i sumowanie ilosci w src/cart.ts:20-34 sa zgodne z SPEC. Patrz jednak DIV-CART-3 (luka w SPEC: cena przy powtornym add)." }
+      ]
+    },
+
+    {
+      "module": "src/cart.ts",
+      "class": "Cart",
+      "function": "Cart.remove",
+      "kind": "class-method",
+      "signature": "remove(sku: string, qty: number): void",
+      "returns": { "type": "void", "effect": "mutuje prywatny stan `lines`" },
+
+      "rules": [
+        {
+          "id": "CART-REM-R1",
+          "rule": "qty musi byc calkowita liczba dodatnia.",
+          "specSection": "Sekcja 4: Koszyk zakupowy / remove(sku, qty)",
+          "boundaries": [
+            { "input": { "sku": "SKU-1", "qty": 1 }, "expectedPerSpec": "ok (gdy SKU jest w koszyku)" },
+            { "input": { "sku": "SKU-1", "qty": 0 }, "raises": "RangeError: quantity must be a positive integer" },
+            { "input": { "sku": "SKU-1", "qty": -1 }, "raises": "RangeError: quantity must be a positive integer" },
+            { "input": { "sku": "SKU-1", "qty": 1.5 }, "raises": "RangeError: quantity must be a positive integer" }
+          ]
+        },
+        {
+          "id": "CART-REM-R2",
+          "rule": "Zdjecie SKU, ktorego nie ma w koszyku, konczy sie bledem `Error: sku not in cart`.",
+          "specSection": "Sekcja 4: Koszyk zakupowy / remove(sku, qty)",
+          "boundaries": [
+            {
+              "sequence": [
+                { "call": "remove", "args": { "sku": "SKU-1", "qty": 1 }, "raises": "Error: sku not in cart" }
+              ],
+              "note": "pusty koszyk - najprostsze wejscie w te galaz"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "remove", "args": { "sku": "SKU-2", "qty": 1 }, "raises": "Error: sku not in cart" }
+              ],
+              "note": "koszyk niepusty, ale inne SKU"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "remove", "args": { "sku": "sku-1", "qty": 1 }, "raises": "Error: sku not in cart" }
+              ],
+              "note": "dopasowanie SKU jest case-sensitive"
+            }
+          ]
+        },
+        {
+          "id": "CART-REM-R3",
+          "rule": "Zdjecie wskazanej liczby sztuk zmniejsza ilosc pozycji o `qty`.",
+          "specSection": "Sekcja 4: Koszyk zakupowy / remove(sku, qty)",
+          "boundaries": [
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 5 } },
+                { "call": "remove", "args": { "sku": "SKU-1", "qty": 2 } },
+                { "call": "total", "expectedPerSpec": 3000 }
+              ],
+              "note": "zdjecie czesci sztuk"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 5 } },
+                { "call": "remove", "args": { "sku": "SKU-1", "qty": 5 } },
+                { "call": "total", "expectedPerSpec": 0 }
+              ],
+              "note": "GRANICA: qty == ilosc w koszyku, wynik dokladnie 0 - najwieksze legalne zdjecie"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 5 } },
+                { "call": "remove", "args": { "sku": "SKU-1", "qty": 6 } },
+                { "call": "total", "expectedPerSpec": "NIEOKRESLONE", "currentCodeBehavior": "RangeError: cart quantity underflow" }
+              ],
+              "note": "GRANICA + 1: zdjecie wiecej sztuk niz jest w koszyku. SPEC MILCZY (patrz DIV-CART-1). Kod pozwala `remove` przejsc bez bledu i wywala sie dopiero w `total()` komunikatem, ktorego nie ma w SPEC. To najwazniejszy przypadek graniczny tej metody."
+            }
+          ]
+        }
+      ],
+
+      "inputDomains": {
+        "sku": {
+          "type": "string",
+          "hasRequiredTextFormat": false,
+          "formatNote": "Jak w Cart.add - SPEC nie narzuca formatu SKU. Poprawnosc nie zalezy tu od kształtu stringa, a od tego, czy taki SKU jest w koszyku (stan), dlatego przyklady `niepoprawne` sa opisane w statefulSequences, nie jako wzorzec.",
+          "allowedRange": "dowolny string",
+          "identityRole": "musi byc identyczny ze `sku` uzytym w poprzedzajacym `add`, inaczej Error: sku not in cart",
+          "representativeValues": ["SKU-1", "SKU-2", "", "sku-1", "SKU-1 "]
+        },
+        "qty": {
+          "type": "integer",
+          "unit": "sztuki",
+          "hasRequiredTextFormat": false,
+          "allowedRange": { "min": 1, "minInclusive": true, "max": "ilosc tego SKU aktualnie w koszyku", "maxInclusive": true, "maxNote": "Gorna granica jest ZALEZNA OD STANU, nie statyczna - generator musi ja wyliczyc z sumy `qty` wczesniejszych `add`." },
+          "equivalenceClasses": [
+            { "name": "niedodatnia", "valid": false, "probes": [0, -1], "probes@expr": ["-0"], "raises": "RangeError" },
+            { "name": "nie-calkowita", "valid": false, "probes": [1.5], "probes@expr": ["NaN", "Infinity"], "raises": "RangeError" },
+            { "name": "czesciowe-zdjecie", "valid": true, "probes": ["1..(qtyInCart - 1)"] },
+            { "name": "pelne-zdjecie", "valid": true, "probes": ["qtyInCart"], "note": "granica domkniete" },
+            { "name": "przekroczenie-stanu", "valid": "NIEOKRESLONE w SPEC", "probes": ["qtyInCart + 1", "qtyInCart * 2"], "note": "patrz DIV-CART-1" }
+          ],
+          "boundaryValues": [0, 1, "qtyInCart - 1", "qtyInCart", "qtyInCart + 1", 1.5],
+          "boundaryValues@expr": ["-0", "NaN", "Infinity"]
+        }
+      },
+
+      "errors": [
+        {
+          "type": "RangeError",
+          "message": "quantity must be a positive integer",
+          "condition": "!Number.isInteger(qty) || qty <= 0",
+          "specSection": "Sekcja 4 / remove",
+          "triggers": [0, -1, 1.5],
+          "triggers@expr": ["NaN", "Infinity"],
+          "precedence": 1
+        },
+        {
+          "type": "Error",
+          "message": "sku not in cart",
+          "condition": "w `lines` nie ma pozycji o tym `sku`",
+          "specSection": "Sekcja 4 / remove",
+          "triggers": ["remove na pustym koszyku", "remove SKU nieobecnego w koszyku", "remove z inna wielkoscia liter"],
+          "precedence": 2
+        }
+      ],
+      "errorPrecedenceNote": "qty walidowane PRZED sprawdzeniem obecnosci SKU: remove(\"NIE-MA-TAKIEGO\", 0) na pustym koszyku zglasza RangeError (ilosc), nie Error (brak SKU).",
+
+      "statefulSequences": [
+        {
+          "id": "SEQ-REM-1",
+          "name": "dodaj i zdejmij czesc",
+          "calls": ["add", "remove", "total"],
+          "sharedArguments": ["sku"],
+          "sharedArgumentsNote": "`sku` w `remove` MUSI byc identycznym stringiem co w `add` (porownanie ===, bez trim, case-sensitive). Losowe SKU w `remove` zawsze konczy sie `Error: sku not in cart` i nie testuje logiki odejmowania.",
+          "businessMeaning": "Klient zmniejsza ilosc produktu w koszyku.",
+          "constraints": ["remove.qty <= suma add.qty dla tego sku"],
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 5] },
+            { "call": "remove", "args": ["SKU-1", 2] },
+            { "call": "total", "expectedPerSpec": 3000 }
+          ]
+        },
+        {
+          "id": "SEQ-REM-2",
+          "name": "oproznienie pozycji do zera",
+          "calls": ["add", "remove", "total"],
+          "sharedArguments": ["sku"],
+          "businessMeaning": "Klient usuwa produkt z koszyka calkowicie.",
+          "constraints": ["remove.qty === suma add.qty dla tego sku"],
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 3] },
+            { "call": "remove", "args": ["SKU-1", 3] },
+            { "call": "total", "expectedPerSpec": 0 }
+          ]
+        },
+        {
+          "id": "SEQ-REM-3",
+          "name": "zdjecie wiecej niz jest w koszyku (underflow)",
+          "calls": ["add", "remove", "total"],
+          "sharedArguments": ["sku"],
+          "sharedArgumentsNote": "Ta sekwencja ma sens TYLKO gdy `sku` jest wspolne - inaczej `remove` przerywa sie na `Error: sku not in cart` i ujemna ilosc nigdy nie powstaje.",
+          "businessMeaning": "Sytuacja bledna z punktu widzenia biznesu: koszyk nie moze zawierac ujemnej liczby sztuk. SPEC nie opisuje reakcji - to luka do rozstrzygniecia (DIV-CART-1).",
+          "constraints": ["remove.qty > suma add.qty dla tego sku"],
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 1] },
+            { "call": "remove", "args": ["SKU-1", 2] },
+            { "call": "total", "currentCodeBehavior": "RangeError: cart quantity underflow", "expectedPerSpec": "NIEOKRESLONE" }
+          ]
+        },
+        {
+          "id": "SEQ-REM-4",
+          "name": "underflow zamaskowany druga pozycja",
+          "calls": ["add", "add", "remove", "total"],
+          "sharedArguments": ["sku (miedzy pierwszym add i remove)"],
+          "sharedArgumentsNote": "`remove` celuje w SKU pierwszej pozycji; druga pozycja ma INNE sku i dodatnia wartosc.",
+          "businessMeaning": "Ujemna ilosc na jednej pozycji zanizyla by sume calego koszyka, gdyby `total()` nie pilnowal ujemnych ilosci. Sekwencja rozroznia `total()` rzucajacy blad od `total()` cicho odejmujacego.",
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 1] },
+            { "call": "add", "args": ["SKU-2", 5000, 1] },
+            { "call": "remove", "args": ["SKU-1", 3] },
+            { "call": "total", "currentCodeBehavior": "RangeError: cart quantity underflow", "naiveBuggyBehavior": 3000, "expectedPerSpec": "NIEOKRESLONE" }
+          ]
+        },
+        {
+          "id": "SEQ-REM-5",
+          "name": "kupon po oproznieniu pozycji",
+          "calls": ["add", "remove", "applyCoupon", "total"],
+          "sharedArguments": ["sku (miedzy add i remove)"],
+          "businessMeaning": "Klient usunal wszystko z koszyka, a potem probuje uzyc kuponu. Wg SPEC koszyk jest wtedy pusty i kupon ma zostac odrzucony (`cannot apply coupon to an empty cart`).",
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 2] },
+            { "call": "remove", "args": ["SKU-1", 2] },
+            { "call": "applyCoupon", "args": ["SAVE10"], "expectedPerSpec": "Error: cannot apply coupon to an empty cart", "currentCodeBehavior": "brak bledu - pozycja o qty 0 nadal jest w `lines`, wiec lines.length !== 0" },
+            { "call": "total", "expectedPerSpec": 0, "currentCodeBehavior": 0 }
+          ],
+          "note": "Patrz DIV-CART-2. Rozbieznosc jest widoczna tylko przez sam fakt (nie)rzucenia bledu - total() jest w obu wariantach rowne 0."
+        }
+      ],
+
+      "specVsCode": [
+        {
+          "verdict": "luka-w-spec",
+          "id": "DIV-CART-1",
+          "rule": "CART-REM-R3",
+          "specSection": "Sekcja 4 / remove",
+          "intended": "SPEC wymienia tylko dwa bledy `remove` (zla ilosc, brak SKU) i milczy o zdjeciu wiekszej liczby sztuk niz jest w koszyku. Z reguly `ceny i ilosci sa liczbami calkowitymi` oraz z sensu biznesowego koszyka wynika, ze ilosc nie moze zejsc ponizej zera - ale SPEC nie mowi, czy ma to byc blad w `remove`, czy przyciecie do zera.",
+          "actual": "src/cart.ts:46 wykonuje `existing.qty = existing.qty - qty` bez zadnego ograniczenia dolnego; ujemna ilosc zostaje w koszyku i wybucha dopiero w `total()` (src/cart.ts:64-66) jako `RangeError: cart quantity underflow` - komunikat nieobecny w SPEC.",
+          "witness": { "sequence": ["add(\"SKU-1\", 1000, 1)", "remove(\"SKU-1\", 2)", "total()"], "currentCodeBehavior": "RangeError: cart quantity underflow" },
+          "impact": "Blad zglasza sie w innym miejscu niz powstal (opozniona detekcja). Wymaga decyzji biznesowej przed napisaniem oracle - dlatego `expectedPerSpec` dla tych przypadkow oznaczono jako NIEOKRESLONE, a nie jako zachowanie kodu.",
+          "openQuestion": "Czy `remove(sku, qty)` z qty przekraczajaca stan ma rzucic blad natychmiast, czy przyciac ilosc do zera? Do potwierdzenia z wlascicielem SPEC."
+        },
+        {
+          "verdict": "rozbieznosc",
+          "id": "DIV-CART-2",
+          "rule": "CART-COUPON-R3",
+          "specSection": "Sekcja 4 / applyCoupon",
+          "intended": "`koszyk jest pusty` -> `Error: cannot apply coupon to an empty cart`. Koszyk, z ktorego zdjeto wszystkie sztuki, jest pusty w sensie biznesowym.",
+          "actual": "src/cart.ts:54 sprawdza `this.lines.length === 0`, a `remove` nie usuwa pozycji o zerowej ilosci - pozycja `{qty: 0}` zostaje w tablicy, wiec kupon przechodzi.",
+          "witness": { "sequence": ["add(\"SKU-1\", 1000, 2)", "remove(\"SKU-1\", 2)", "applyCoupon(\"SAVE10\")"], "expectedPerSpec": "Error: cannot apply coupon to an empty cart", "currentCodeBehavior": "brak bledu" },
+          "impact": "Do wykrycia potrzebna jest sekwencja add -> remove -> applyCoupon; zaden test wywolujacy applyCoupon tylko na swiezym koszyku tego nie zlapie."
+        }
+      ]
+    },
+
+    {
+      "module": "src/cart.ts",
+      "class": "Cart",
+      "function": "Cart.applyCoupon",
+      "kind": "class-method",
+      "signature": "applyCoupon(code: string): void",
+      "returns": { "type": "void", "effect": "ustawia prywatne `discountPct`" },
+
+      "rules": [
+        {
+          "id": "CART-COUPON-R1",
+          "rule": "Kupon ustawia rabat procentowy dla calego koszyka: \"SAVE10\" daje 10%, \"HALF\" daje 50%. Nie ma innych kodow.",
+          "specSection": "Sekcja 4: Koszyk zakupowy / applyCoupon(code)",
+          "boundaries": [
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 2 } },
+                { "call": "applyCoupon", "args": { "code": "SAVE10" } },
+                { "call": "total", "expectedPerSpec": 1800 }
+              ],
+              "note": "2000 gr - 10%"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 2 } },
+                { "call": "applyCoupon", "args": { "code": "HALF" } },
+                { "call": "total", "expectedPerSpec": 1000 }
+              ],
+              "note": "2000 gr - 50%"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 2 } },
+                { "call": "applyCoupon", "args": { "code": "save10" }, "raises": "Error: unknown coupon" }
+              ],
+              "note": "kody sa case-sensitive"
+            }
+          ]
+        },
+        {
+          "id": "CART-COUPON-R2",
+          "rule": "Nieznany kod kuponu konczy sie bledem `Error: unknown coupon` i NIE zmienia obowiazujacego rabatu.",
+          "specSection": "Sekcja 4: Koszyk zakupowy / applyCoupon(code)",
+          "boundaries": [
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 2 } },
+                { "call": "applyCoupon", "args": { "code": "HALF" } },
+                { "call": "applyCoupon", "args": { "code": "NIE-ISTNIEJE" }, "raises": "Error: unknown coupon" },
+                { "call": "total", "expectedPerSpec": 1000 }
+              ],
+              "note": "odrzucony kupon nie kasuje wczesniejszego rabatu 50%"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 2 } },
+                { "call": "applyCoupon", "args": { "code": "constructor" }, "expectedPerSpec": "Error: unknown coupon", "currentCodeBehavior": "brak bledu - discountPct staje sie funkcja Object" },
+                { "call": "total", "expectedPerSpec": 2000, "currentCodeBehavior": "NaN" }
+              ],
+              "note": "KLUCZOWA GRANICA: klucze z prototypu Object. Patrz DIV-CART-5."
+            }
+          ]
+        },
+        {
+          "id": "CART-COUPON-R3",
+          "rule": "Kuponu nie mozna zastosowac do pustego koszyka - `Error: cannot apply coupon to an empty cart`.",
+          "specSection": "Sekcja 4: Koszyk zakupowy / applyCoupon(code)",
+          "boundaries": [
+            {
+              "sequence": [
+                { "call": "applyCoupon", "args": { "code": "SAVE10" }, "raises": "Error: cannot apply coupon to an empty cart" }
+              ],
+              "note": "swiezy koszyk"
+            },
+            {
+              "sequence": [
+                { "call": "applyCoupon", "args": { "code": "NIE-ISTNIEJE" }, "expectedPerSpec": "Error: unknown coupon", "currentCodeBehavior": "Error: unknown coupon" }
+              ],
+              "note": "GRANICA KOLEJNOSCI: pusty koszyk ORAZ nieznany kod. Kod sprawdza kod kuponu przed pustoscia (src/cart.ts:50-56). SPEC podaje oba warunki w jednej tabeli bez kolejnosci - nie nalezy na tym opierac oracle, patrz DIV-CART-6."
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 0, "qty": 1 } },
+                { "call": "applyCoupon", "args": { "code": "SAVE10" } },
+                { "call": "total", "expectedPerSpec": 0 }
+              ],
+              "note": "koszyk z pozycja za 0 gr NIE jest pusty - kupon przechodzi, choc nie ma czego rabatowac"
+            }
+          ]
+        },
+        {
+          "id": "CART-COUPON-R4",
+          "rule": "Ponowne uzycie kuponu NADPISUJE poprzedni rabat - rabaty sie nie kumuluja.",
+          "specSection": "Sekcja 4: Koszyk zakupowy / applyCoupon(code)",
+          "boundaries": [
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 10 } },
+                { "call": "applyCoupon", "args": { "code": "SAVE10" } },
+                { "call": "applyCoupon", "args": { "code": "HALF" } },
+                { "call": "total", "expectedPerSpec": 5000 }
+              ],
+              "note": "10% potem 50% -> 50%, nie 55% (9000*0.5=4500) i nie 60%"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 10 } },
+                { "call": "applyCoupon", "args": { "code": "HALF" } },
+                { "call": "applyCoupon", "args": { "code": "SAVE10" } },
+                { "call": "total", "expectedPerSpec": 9000 }
+              ],
+              "note": "kolejnosc odwrotna - rabat MALEJE do 10%; wykrywa implementacje typu `max(rabatow)`"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 10 } },
+                { "call": "applyCoupon", "args": { "code": "SAVE10" } },
+                { "call": "applyCoupon", "args": { "code": "SAVE10" } },
+                { "call": "total", "expectedPerSpec": 9000 }
+              ],
+              "note": "ten sam kupon dwa razy - nadal 10%, nie 19% ani 20%"
+            }
+          ]
+        }
+      ],
+
+      "inputDomains": {
+        "code": {
+          "type": "string",
+          "hasRequiredTextFormat": true,
+          "domainKind": "zamknieta enumeracja (nie wzorzec)",
+          "pattern": "^(SAVE10|HALF)$",
+          "patternNote": "Domena to dwuelementowa enumeracja, nie rodzina stringow - `wzorzec` jest tu wyliczeniem alternatyw. Dopasowanie jest dokladne: bez trim, case-sensitive.",
+          "caseSensitive": true,
+          "allowedValues": [
+            { "value": "SAVE10", "discountPct": 10 },
+            { "value": "HALF", "discountPct": 50 }
+          ],
+          "validExamples": ["SAVE10", "HALF"],
+          "validExamplesNote": "SPEC (Sekcja 4, tabela kuponow) definiuje DOKLADNIE dwie poprawne wartosci, wiec nie da sie podac trzeciego przykladu poprawnego bez wymyslania kodu, ktorego nie ma w wymaganiach. Zamiast tego rozszerzono liste przykladow niepoprawnych i dodano klasy rownowaznosci.",
+          "invalidExamples": [
+            { "value": "save10", "reason": "male litery - kod jest case-sensitive", "raises": "Error: unknown coupon" },
+            { "value": "Half", "reason": "mieszana wielkosc liter", "raises": "Error: unknown coupon" },
+            { "value": "SAVE 10", "reason": "spacja w srodku", "raises": "Error: unknown coupon" },
+            { "value": " SAVE10", "reason": "spacja wiodaca - brak trim, inaczej niz w parseInvoiceId", "raises": "Error: unknown coupon" },
+            { "value": "SAVE10 ", "reason": "spacja konczaca", "raises": "Error: unknown coupon" },
+            { "value": "SAVE20", "reason": "kod nieistniejacy w tabeli", "raises": "Error: unknown coupon" },
+            { "value": "SAVE1", "reason": "prefiks poprawnego kodu", "raises": "Error: unknown coupon" },
+            { "value": "SAVE100", "reason": "poprawny kod z dopiskiem", "raises": "Error: unknown coupon" },
+            { "value": "", "reason": "pusty string", "raises": "Error: unknown coupon" },
+            { "value": "HALF,SAVE10", "reason": "dwa kody naraz - kupony sa pojedyncze", "raises": "Error: unknown coupon" }
+          ],
+          "prototypeChainProbes": {
+            "note": "Nazwy odziedziczone z Object.prototype NIE sa kodami kuponow i wg SPEC musza dac `Error: unknown coupon`. Sa wyszczegolnione osobno, bo aktualna implementacja (`COUPONS[code]`, src/cart.ts:50) przepuszcza je - patrz DIV-CART-5. Generator MUSI wygenerowac te wartosci; losowy string ich nie trafi.",
+            "values": ["constructor", "__proto__", "toString", "valueOf", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString"],
+            "expectedPerSpec": "Error: unknown coupon",
+            "currentCodeBehavior": "brak bledu; `discountPct` przyjmuje wartosc odziedziczona (funkcja lub Object.prototype), po czym `total()` zwraca NaN"
+          },
+          "equivalenceClasses": [
+            { "name": "kupon-znany", "valid": true, "probes": ["SAVE10", "HALF"] },
+            { "name": "kupon-nieznany-zwykly", "valid": false, "probes": ["SAVE20", "save10", "", "SAVE10 ", "FREE"], "raises": "Error: unknown coupon" },
+            { "name": "kupon-nieznany-z-prototypu", "valid": false, "probes": ["constructor", "__proto__", "toString", "valueOf", "hasOwnProperty"], "raises": "Error: unknown coupon", "note": "klasa rozbieznosci - patrz DIV-CART-5" }
+          ],
+          "boundaryValues": ["SAVE10", "HALF", "save10", "SAVE10 ", "", "constructor", "__proto__", "toString"]
+        }
+      },
+
+      "errors": [
+        {
+          "type": "Error",
+          "message": "unknown coupon",
+          "condition": "code nie jest jednym z {\"SAVE10\", \"HALF\"}",
+          "specSection": "Sekcja 4 / applyCoupon",
+          "triggers": ["SAVE20", "save10", "", " SAVE10", "HALF,SAVE10", "constructor", "__proto__", "toString"],
+          "precedence": 1,
+          "note": "Trzy ostatnie triggery wg SPEC naleza tutaj, ale aktualny kod ich nie zglasza (DIV-CART-5)."
+        },
+        {
+          "type": "Error",
+          "message": "cannot apply coupon to an empty cart",
+          "condition": "koszyk nie zawiera zadnej pozycji (wg SPEC: zadnej sztuki)",
+          "specSection": "Sekcja 4 / applyCoupon",
+          "triggers": ["applyCoupon(\"SAVE10\") na swiezym koszyku", "applyCoupon(\"HALF\") po zdjeciu wszystkich sztuk (patrz DIV-CART-2)"],
+          "precedence": 2
+        }
+      ],
+      "errorPrecedenceNote": "W kodzie znajomosc kodu kuponu sprawdzana jest PRZED pustoscia koszyka, wiec applyCoupon(\"SAVE20\") na pustym koszyku daje `unknown coupon`. SPEC nie ustala tej kolejnosci (DIV-CART-6) - oracle nie powinien jej wymuszac, dopoki nie zostanie dopisana do SPEC.",
+
+      "statefulSequences": [
+        {
+          "id": "SEQ-COUPON-1",
+          "name": "kupon wymaga niepustego koszyka",
+          "calls": ["add", "applyCoupon", "total"],
+          "sharedArguments": [],
+          "sharedArgumentsNote": "`applyCoupon` nie przyjmuje `sku`, wiec nie dzieli argumentow z `add` - wspolny jest tylko STAN koszyka. Warunek konieczny: co najmniej jeden udany `add` PRZED `applyCoupon` (w odwrotnej kolejnosci sekwencja konczy sie bledem pustego koszyka).",
+          "businessMeaning": "Klient najpierw kompletuje koszyk, potem wpisuje kod rabatowy.",
+          "ordering": "add < applyCoupon < total",
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 2] },
+            { "call": "applyCoupon", "args": ["SAVE10"] },
+            { "call": "total", "expectedPerSpec": 1800 }
+          ]
+        },
+        {
+          "id": "SEQ-COUPON-2",
+          "name": "kupon przed dodaniem towaru",
+          "calls": ["applyCoupon", "add", "total"],
+          "sharedArguments": [],
+          "businessMeaning": "Klient wpisuje kod rabatowy przy pustym koszyku - kod jest odrzucony i pozniejsze dodanie towaru NIE aktywuje go retroaktywnie.",
+          "example": [
+            { "call": "applyCoupon", "args": ["SAVE10"], "raises": "Error: cannot apply coupon to an empty cart" },
+            { "call": "add", "args": ["SKU-1", 1000, 2] },
+            { "call": "total", "expectedPerSpec": 2000 }
+          ]
+        },
+        {
+          "id": "SEQ-COUPON-3",
+          "name": "nadpisanie kuponu",
+          "calls": ["add", "applyCoupon", "applyCoupon", "total"],
+          "sharedArguments": [],
+          "sharedArgumentsNote": "Oba `applyCoupon` dzialaja na TYM SAMYM egzemplarzu Cart - inaczej nie da sie zaobserwowac nadpisania. Kody musza sie ROZNIC, zeby rozroznic nadpisanie od kumulacji.",
+          "businessMeaning": "Klient zmienia kod rabatowy - obowiazuje ostatni, rabaty sie nie kumuluja.",
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 10] },
+            { "call": "applyCoupon", "args": ["SAVE10"] },
+            { "call": "applyCoupon", "args": ["HALF"] },
+            { "call": "total", "expectedPerSpec": 5000 }
+          ]
+        },
+        {
+          "id": "SEQ-COUPON-4",
+          "name": "rabat obejmuje towar dodany po kuponie",
+          "calls": ["add", "applyCoupon", "add", "total"],
+          "sharedArguments": ["sku (opcjonalnie wspolne miedzy oboma add - wtedy testuje tez sumowanie ilosci)"],
+          "businessMeaning": "Rabat jest wlasnoscia calego koszyka, nie pozycji - towar dorzucony po wpisaniu kodu tez jest rabatowany.",
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 1] },
+            { "call": "applyCoupon", "args": ["HALF"] },
+            { "call": "add", "args": ["SKU-2", 1000, 1] },
+            { "call": "total", "expectedPerSpec": 1000 }
+          ],
+          "note": "1000 zamiast 1500 - dowod, ze rabat nie jest zamrazany w chwili applyCoupon."
+        },
+        {
+          "id": "SEQ-COUPON-5",
+          "name": "kupon z prototypu Object",
+          "calls": ["add", "applyCoupon", "total"],
+          "sharedArguments": [],
+          "businessMeaning": "Uzytkownik wpisuje w pole kodu rabatowego nazwe wlasnosci JavaScriptu. Wg SPEC to zwykly nieznany kupon.",
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 2] },
+            { "call": "applyCoupon", "args": ["constructor"], "expectedPerSpec": "Error: unknown coupon", "currentCodeBehavior": "brak bledu" },
+            { "call": "total", "expectedPerSpec": 2000, "currentCodeBehavior": "NaN" }
+          ],
+          "note": "Patrz DIV-CART-5. Sprawdzic tez \"__proto__\", \"toString\", \"valueOf\", \"hasOwnProperty\"."
+        }
+      ],
+
+      "specVsCode": [
+        {
+          "verdict": "rozbieznosc",
+          "id": "DIV-CART-5",
+          "rule": "CART-COUPON-R2",
+          "specSection": "Sekcja 4 / applyCoupon - `nieznany kod` -> `Error: unknown coupon`",
+          "intended": "Kazdy kod inny niz \"SAVE10\" i \"HALF\" jest nieznany i konczy sie bledem.",
+          "actual": "src/cart.ts:50 czyta `COUPONS[code]` ze zwyklego obiektu literalnego i odrzuca tylko `undefined`. Dla nazw odziedziczonych z Object.prototype (\"constructor\", \"toString\", \"valueOf\", \"hasOwnProperty\", \"__proto__\", ...) odczyt zwraca wartosc rozna od undefined, wiec walidacja przechodzi i `discountPct` zostaje ustawione na funkcje albo na Object.prototype.",
+          "witness": { "sequence": ["add(\"SKU-1\", 1000, 2)", "applyCoupon(\"constructor\")", "total()"], "expectedPerSpec": "Error: unknown coupon na applyCoupon", "currentCodeBehavior": "applyCoupon przechodzi, total() zwraca NaN" },
+          "impact": "Koszyk wchodzi w stan, w ktorym `total()` zwraca NaN - kwota do zaplaty przestaje byc liczba. Wykrywalne tylko przez celowe wygenerowanie nazw z prototypu Object; generator losowych stringow tego nie trafi.",
+          "suggestedFix": "Sprawdzac przynaleznosc przez `Object.hasOwn(COUPONS, code)` (albo `Object.create(null)` / `Map`) zamiast porownania z undefined."
+        },
+        {
+          "verdict": "luka-w-spec",
+          "id": "DIV-CART-6",
+          "rule": "CART-COUPON-R2 vs CART-COUPON-R3",
+          "specSection": "Sekcja 4 / applyCoupon - tabela bledow",
+          "intended": "SPEC wymienia oba warunki (`nieznany kod`, `koszyk jest pusty`) w jednej tabeli, bez okreslenia, ktory ma pierwszenstwo, gdy zachodza jednoczesnie.",
+          "actual": "Kod sprawdza kod kuponu przed pustoscia koszyka, wiec `applyCoupon(\"SAVE20\")` na pustym koszyku daje `unknown coupon`.",
+          "witness": { "sequence": ["applyCoupon(\"SAVE20\") na swiezym koszyku"], "currentCodeBehavior": "Error: unknown coupon" },
+          "impact": "Test przypinajacy konkretny komunikat dla tego przypadku bylby testem implementacji, nie wymagania. Oracle powinien tu dopuszczac oba komunikaty do czasu uzupelnienia SPEC.",
+          "openQuestion": "Ktory blad ma pierwszenstwo przy jednoczesnie nieznanym kodzie i pustym koszyku?"
+        }
+      ]
+    },
+
+    {
+      "module": "src/cart.ts",
+      "class": "Cart",
+      "function": "Cart.total",
+      "kind": "class-method",
+      "signature": "total(): number",
+      "returns": {
+        "type": "integer",
+        "unit": "grosz",
+        "constraint": "liczba calkowita nieujemna",
+        "invariant": "Number.isInteger(result) && result >= 0 - `total()` nie moze zwrocic NaN ani wartosci ujemnej dla zadnej sekwencji wywolan (naruszane przez DIV-CART-5)"
+      },
+
+      "rules": [
+        {
+          "id": "CART-TOTAL-R1",
+          "rule": "Wartosc koszyka to suma `priceGrosz * qty` po wszystkich pozycjach. Pusty koszyk daje 0.",
+          "specSection": "Sekcja 4: Koszyk zakupowy / total()",
+          "boundaries": [
+            { "sequence": [{ "call": "total", "expectedPerSpec": 0 }], "note": "GRANICA: pusty koszyk - 0, nie blad" },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 0, "qty": 1 } },
+                { "call": "total", "expectedPerSpec": 0 }
+              ],
+              "note": "pozycja za 0 gr - suma 0, ale koszyk NIE jest pusty"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1, "qty": 1 } },
+                { "call": "total", "expectedPerSpec": 1 }
+              ],
+              "note": "najmniejsza dodatnia suma"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1999, "qty": 3 } },
+                { "call": "add", "args": { "sku": "SKU-2", "priceGrosz": 500, "qty": 2 } },
+                { "call": "total", "expectedPerSpec": 6997 }
+              ],
+              "note": "1999*3 + 500*2 - wiele pozycji"
+            }
+          ]
+        },
+        {
+          "id": "CART-TOTAL-R2",
+          "rule": "Suma jest pomniejszona o obowiazujacy rabat procentowy: subtotal * (100 - discountPct) / 100.",
+          "specSection": "Sekcja 4: Koszyk zakupowy / total()",
+          "boundaries": [
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "total", "expectedPerSpec": 1000 }
+              ],
+              "note": "GRANICA: discountPct = 0 (brak kuponu) - suma bez zmian"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "applyCoupon", "args": { "code": "SAVE10" } },
+                { "call": "total", "expectedPerSpec": 900 }
+              ],
+              "note": "rabat 10%"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "applyCoupon", "args": { "code": "HALF" } },
+                { "call": "total", "expectedPerSpec": 500 }
+              ],
+              "note": "GRANICA: najwyzszy dostepny rabat 50%"
+            }
+          ]
+        },
+        {
+          "id": "CART-TOTAL-R3",
+          "rule": "Wynik jest zaokraglony do pelnych groszy (rabat procentowy moze dac wartosc ulamkowa).",
+          "specSection": "Sekcja 4: Koszyk zakupowy / total()",
+          "boundaries": [
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1999, "qty": 1 } },
+                { "call": "applyCoupon", "args": { "code": "SAVE10" } },
+                { "call": "total", "expectedPerSpec": 1799 }
+              ],
+              "note": "1799.1 -> 1799 - zaokraglenie w dol, jednoznaczne"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1995, "qty": 1 } },
+                { "call": "applyCoupon", "args": { "code": "SAVE10" } },
+                { "call": "total", "expectedPerSpec": 1796 }
+              ],
+              "note": "1795.5 -> 1796 - zaokraglenie w gore, jednoznaczne (>= .5 w gore dla dodatnich)"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 3, "qty": 1 } },
+                { "call": "applyCoupon", "args": { "code": "HALF" } },
+                { "call": "total", "expectedPerSpec": 2, "currentCodeBehavior": 2 }
+              ],
+              "note": "GRANICA POLOWY: 1.5 gr. Kod uzywa Math.round (half-up) -> 2. SPEC nie okresla reguly rozstrzygania polowy (DIV-CART-7) - wynik 2 zgadza sie z half-up, ale zaokraglenie bankierskie z sekcji 3 dalo by 2 rowniez."
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1, "qty": 1 } },
+                { "call": "applyCoupon", "args": { "code": "HALF" } },
+                { "call": "total", "expectedPerSpec": "NIEOKRESLONE", "currentCodeBehavior": 1 }
+              ],
+              "note": "GRANICA POLOWY ROZSTRZYGAJACA: 0.5 gr. half-up daje 1, bankierskie daje 0. To jedyny przypadek, ktory rozroznia obie reguly przy malych kwotach - SPEC musi to rozstrzygnac (DIV-CART-7)."
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 5, "qty": 1 } },
+                { "call": "applyCoupon", "args": { "code": "HALF" } },
+                { "call": "total", "expectedPerSpec": "NIEOKRESLONE", "currentCodeBehavior": 3 }
+              ],
+              "note": "2.5 gr - half-up daje 3, bankierskie daje 2 (DIV-CART-7)"
+            }
+          ],
+          "halfTieProbes": {
+            "note": "Sumy dajace dokladnie polowe grosza: przy HALF (50%) kazdy nieparzysty subtotal, przy SAVE10 (10%) kazdy subtotal przystajacy do 5 modulo 10.",
+            "half50": [1, 3, 5, 7, 9, 1999],
+            "save10": [5, 15, 25, 1995]
+          }
+        },
+        {
+          "id": "CART-TOTAL-R4",
+          "rule": "Wartosc koszyka nigdy nie jest ujemna ani nieliczbowa - `total()` zwraca calkowita liczbe groszy >= 0 dla kazdej dopuszczalnej sekwencji wywolan.",
+          "specSection": "Sekcja 4: Koszyk zakupowy (wywnioskowane z `Wszystkie ceny wyrazone sa w groszach i sa liczbami calkowitymi` oraz z `total()` - `zwraca wartosc koszyka w groszach`)",
+          "derived": true,
+          "boundaries": [
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "remove", "args": { "sku": "SKU-1", "qty": 5 } },
+                { "call": "total", "expectedPerSpec": "NIEOKRESLONE (ale nie ujemne i nie NaN)", "currentCodeBehavior": "RangeError: cart quantity underflow" }
+              ],
+              "note": "patrz DIV-CART-1"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 1000, "qty": 1 } },
+                { "call": "applyCoupon", "args": { "code": "toString" } },
+                { "call": "total", "expectedPerSpec": 1000, "currentCodeBehavior": "NaN" }
+              ],
+              "note": "patrz DIV-CART-5 - naruszenie niezmiennika `Number.isInteger(total())`"
+            },
+            {
+              "sequence": [
+                { "call": "add", "args": { "sku": "SKU-1", "priceGrosz": 9007199254740991, "qty": 2 } },
+                { "call": "total", "expectedPerSpec": "NIEOKRESLONE (poza zakresem bezpiecznych liczb calkowitych)", "currentCodeBehavior": "18014398509481982 - wynik niedokladny/na granicy precyzji IEEE754" }
+              ],
+              "note": "patrz DIV-CART-4"
+            }
+          ],
+          "invariantChecks": [
+            "Number.isFinite(total())",
+            "Number.isInteger(total())",
+            "total() >= 0",
+            "total() <= subtotal (rabat nigdy nie zwieksza kwoty)"
+          ]
+        }
+      ],
+
+      "inputDomains": {},
+      "inputDomainsNote": "`total()` nie przyjmuje argumentow. Jej domena wejsciowa to STAN koszyka, w pelni okreslony przez historie wywolan add/remove/applyCoupon - opisany w statefulSequences i w `stateDomain` ponizej.",
+      "stateDomain": {
+        "lines": {
+          "count": { "boundaryValues": [0, 1, 2, 10] },
+          "priceGrosz": { "boundaryValues": [0, 1, 3, 5, 1995, 1999], "note": "wartosci nieparzyste i przystajace do 5 mod 10 sluza do trafienia w polowe grosza po rabacie" },
+          "qty": { "boundaryValues": [1, 2, 3, 10], "invalidReachableViaRemove": [0, -1], "note": "qty == 0 osiagalne przez pelne `remove`; qty < 0 osiagalne tylko przez `remove` przekraczajace stan (DIV-CART-1)" }
+        },
+        "discountPct": {
+          "reachableValues": [0, 10, 50],
+          "boundaryValues": [0, 10, 50],
+          "unreachablePerSpec": ["funkcja Object.prototype (osiagalne w aktualnym kodzie - DIV-CART-5)"]
+        }
+      },
+
+      "errors": [
+        {
+          "type": "RangeError",
+          "message": "cart quantity underflow",
+          "condition": "ktorakolwiek pozycja ma qty < 0",
+          "specSection": "BRAK - ten blad nie wystepuje w docs/SPEC.md",
+          "specStatus": "nieudokumentowany",
+          "triggers": ["add(\"SKU-1\", 1000, 1); remove(\"SKU-1\", 2); total()"],
+          "note": "Zachowanie kodu (src/cart.ts:64-66), nie wymaganie. Nie nalezy pisac testu przypinajacego ten komunikat, dopoki DIV-CART-1 nie zostanie rozstrzygniete w SPEC."
+        }
+      ],
+      "errorPrecedenceNote": "Wg SPEC `total()` nie ma zadnego warunku bledu - jest funkcja calkowita na stanie koszyka.",
+
+      "statefulSequences": [
+        {
+          "id": "SEQ-TOTAL-1",
+          "name": "total jest idempotentne i bez efektow ubocznych",
+          "calls": ["add", "total", "total"],
+          "sharedArguments": [],
+          "businessMeaning": "Odczyt wartosci koszyka nie zmienia koszyka - dwa kolejne odczyty daja te sama kwote.",
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 2] },
+            { "call": "total", "expectedPerSpec": 2000 },
+            { "call": "total", "expectedPerSpec": 2000 }
+          ]
+        },
+        {
+          "id": "SEQ-TOTAL-2",
+          "name": "pelny przebieg biznesowy",
+          "calls": ["add", "add", "remove", "applyCoupon", "total"],
+          "sharedArguments": ["sku (miedzy add i remove - musi byc ten sam identyfikator produktu)"],
+          "sharedArgumentsNote": "Klucz sekwencji: `remove` MUSI uzyc `sku` wystepujacego w jednym z wczesniejszych `add`. To jedyny argument wspolny miedzy wywolaniami; `applyCoupon` i `total` wiaze ze soba tylko stan tego samego egzemplarza Cart.",
+          "businessMeaning": "Klient kompletuje koszyk, zmniejsza ilosc jednej pozycji, wpisuje kod rabatowy i widzi kwote do zaplaty.",
+          "constraints": ["remove.sku wystepuje w add", "remove.qty <= suma add.qty dla tego sku", "applyCoupon po co najmniej jednym add"],
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 3] },
+            { "call": "add", "args": ["SKU-2", 500, 2] },
+            { "call": "remove", "args": ["SKU-1", 1] },
+            { "call": "applyCoupon", "args": ["SAVE10"] },
+            { "call": "total", "expectedPerSpec": 2700 }
+          ],
+          "exampleMath": "(1000*2 + 500*2) = 3000; 3000 * 0.9 = 2700"
+        },
+        {
+          "id": "SEQ-TOTAL-3",
+          "name": "rabat naliczany na biezacy stan, nie na stan z chwili kuponu",
+          "calls": ["add", "applyCoupon", "remove", "total"],
+          "sharedArguments": ["sku (miedzy add i remove)"],
+          "businessMeaning": "Rabat jest procentem od aktualnej sumy - zdjecie sztuki po wpisaniu kodu zmniejsza kwote proporcjonalnie.",
+          "example": [
+            { "call": "add", "args": ["SKU-1", 1000, 4] },
+            { "call": "applyCoupon", "args": ["HALF"] },
+            { "call": "remove", "args": ["SKU-1", 2] },
+            { "call": "total", "expectedPerSpec": 1000 }
+          ],
+          "exampleMath": "po remove subtotal = 2000; 2000 * 0.5 = 1000 (nie 2000 - implementacja `zamrazajaca` kwote dalaby 2000)"
+        },
+        {
+          "id": "SEQ-TOTAL-4",
+          "name": "izolacja egzemplarzy koszyka",
+          "calls": ["new Cart", "add", "new Cart", "total"],
+          "sharedArguments": [],
+          "sharedArgumentsNote": "Celowo BEZ wspolnego stanu: dwa egzemplarze Cart nie moga dzielic pozycji ani rabatu (`lines` i `discountPct` sa polami instancji, nie statycznymi).",
+          "businessMeaning": "Koszyk jednego klienta nie wplywa na koszyk innego.",
+          "example": [
+            { "call": "cartA.add", "args": ["SKU-1", 1000, 2] },
+            { "call": "cartA.applyCoupon", "args": ["HALF"] },
+            { "call": "cartB.total", "expectedPerSpec": 0 }
+          ]
+        }
+      ],
+
+      "specVsCode": [
+        {
+          "verdict": "luka-w-spec",
+          "id": "DIV-CART-7",
+          "rule": "CART-TOTAL-R3",
+          "specSection": "Sekcja 4 / total() - `zaokraglona do pelnych groszy`",
+          "intended": "SPEC nie okresla reguly rozstrzygania dokladnej polowy grosza. Sekcja 3 (punkty lojalnosciowe) jawnie wymaga zaokraglenia BANKIERSKIEGO, wiec spojnosc dokumentu sugeruje te sama regule dla kwot - ale nie jest to napisane.",
+          "actual": "src/cart.ts:70 uzywa `Math.round`, czyli half-up (dla wartosci dodatnich: w gore).",
+          "witness": { "sequence": ["add(\"SKU-1\", 1, 1)", "applyCoupon(\"HALF\")", "total()"], "currentCodeBehavior": 1, "bankersWouldGive": 0 },
+          "impact": "Rozbieznosc o 1 grosz w przypadkach polowy. Oracle nie moze przypinac ani 0, ani 1 bez rozstrzygniecia w SPEC - dlatego takie przypadki maja `expectedPerSpec: NIEOKRESLONE`.",
+          "openQuestion": "Czy `total()` ma zaokraglac polowe grosza bankiersko (jak punkty w sekcji 3), czy w gore?"
+        },
+        {
+          "verdict": "luka-w-spec",
+          "id": "DIV-CART-3",
+          "rule": "CART-ADD-R3",
+          "specSection": "Sekcja 4 / add - `Dodanie SKU, ktore jest juz w koszyku, sumuje ilosci`",
+          "intended": "SPEC mowi tylko o sumowaniu ILOSCI i nie rozstrzyga, co dzieje sie z cena, gdy ten sam SKU zostanie dodany z inna cena.",
+          "actual": "src/cart.ts:32 aktualizuje wylacznie `qty`; cena z pierwszego `add` obowiazuje, druga jest cicho ignorowana.",
+          "witness": { "sequence": ["add(\"SKU-1\", 1000, 1)", "add(\"SKU-1\", 2000, 1)", "total()"], "currentCodeBehavior": 2000, "alternativeIfLastPriceWins": 4000 },
+          "impact": "Kwota do zaplaty zalezy od kolejnosci dodawania. Bez rozstrzygniecia w SPEC nie da sie napisac oracle dla tego przypadku.",
+          "openQuestion": "Przy powtornym `add` tego samego SKU z inna cena: obowiazuje cena pierwsza, ostatnia, czy jest to blad walidacji?"
+        },
+        {
+          "verdict": "luka-w-spec",
+          "id": "DIV-CART-4",
+          "rule": "CART-TOTAL-R4",
+          "specSection": "Sekcja 4 / total()",
+          "intended": "SPEC nie podaje gornego ograniczenia ceny, ilosci ani sumy koszyka.",
+          "actual": "`priceGrosz * qty` jest zwyklym mnozeniem IEEE754 - powyzej Number.MAX_SAFE_INTEGER wynik przestaje byc dokladny, a `Math.round` nie zwraca ostrzezenia.",
+          "witness": { "sequence": ["add(\"SKU-1\", 9007199254740991, 2)", "total()"], "currentCodeBehavior": "18014398509481982 (na granicy precyzji)" },
+          "impact": "Niski priorytet biznesowy (kwoty nierealne), ale generator SBST bedzie tam trafial. Bez gornego limitu w SPEC oracle powinien te przypadki pomijac albo ograniczyc domene ceny i ilosci.",
+          "openQuestion": "Jaki jest maksymalny dopuszczalny `priceGrosz`, `qty` i `total()`?"
+        }
+      ]
+    }
+  ],
+
+  "crossCuttingNotes": [
+    {
+      "topic": "trim",
+      "note": "Tylko `parseInvoiceId` trimuje wejscie (SPEC sekcja 2). `calculateShipping.zone` i `Cart.applyCoupon.code` NIE trimuja - \" SAVE10\" jest nieznanym kuponem, a \"PL \" strefa pozostala. Generator nie powinien generalizowac trimowania na wszystkie parametry tekstowe."
+    },
+    {
+      "topic": "zaokraglenia",
+      "note": "Dokument uzywa trzech roznych regul zaokraglania: sekcja 1 - do 2 miejsc po przecinku (PLN), sekcja 3 - bankierskie do liczby calkowitej (punkty), sekcja 4 - do pelnych groszy z nieokreslona regula polowy. Sekcja 3 jest jedynym miejscem, gdzie SPEC nazywa regule wprost."
+    },
+    {
+      "topic": "kolejnosc walidacji",
+      "note": "Wszedzie TypeError (typ/skonczonosc) poprzedza RangeError (zakres), a walidacja poprzedza mutacje stanu. Tam gdzie SPEC podaje warunki w tabeli bez kolejnosci (Cart.applyCoupon), oracle nie powinien wymuszac konkretnego komunikatu - patrz DIV-CART-6."
+    },
+    {
+      "topic": "wartosci, ktorych generator losowy nie trafi",
+      "note": "Przypadki wymagajace celowego wygenerowania: dokladnie 5000 dla lifetimeSpendPLN (DIV-LOY-2), kwoty niebedace wielokrotnoscia 10 z reszta >= 5 (DIV-LOY-1), nazwy z Object.prototype dla kodu kuponu (DIV-CART-5), remove przekraczajace stan przy wspolnym sku (DIV-CART-1), sekwencja add -> remove-do-zera -> applyCoupon (DIV-CART-2), nieparzysty subtotal z kuponem HALF (DIV-CART-7)."
+    }
+  ],
+
+  "openQuestionsForSpecOwner": [
+    { "id": "DIV-CART-1", "question": "Czy `remove(sku, qty)` z qty przekraczajaca stan ma rzucic blad natychmiast, czy przyciac ilosc do zera?" },
+    { "id": "DIV-CART-3", "question": "Przy powtornym `add` tego samego SKU z inna cena: obowiazuje cena pierwsza, ostatnia, czy jest to blad?" },
+    { "id": "DIV-CART-4", "question": "Jaki jest maksymalny dopuszczalny `priceGrosz`, `qty` i `total()`?" },
+    { "id": "DIV-CART-6", "question": "Ktory blad ma pierwszenstwo w `applyCoupon` przy jednoczesnie nieznanym kodzie i pustym koszyku?" },
+    { "id": "DIV-CART-7", "question": "Czy `total()` ma zaokraglac polowe grosza bankiersko (spojnie z sekcja 3), czy w gore?" }
+  ],
+
+  "confirmedImplementationBugs": [
+    { "id": "DIV-LOY-1", "module": "src/loyalty.ts", "line": 19, "summary": "Math.floor zamiast zaokraglenia bankierskiego wymaganego przez SPEC sekcja 3" },
+    { "id": "DIV-LOY-2", "module": "src/loyalty.ts", "line": 21, "summary": "prog VIP sprawdzany przez `>` zamiast `>=` (`co najmniej 5000`)" },
+    { "id": "DIV-CART-2", "module": "src/cart.ts", "line": 54, "summary": "koszyk z pozycjami o zerowej ilosci uznawany za niepusty - kupon przechodzi" },
+    { "id": "DIV-CART-5", "module": "src/cart.ts", "line": 50, "summary": "odczyt COUPONS[code] przepuszcza nazwy z Object.prototype - total() zwraca NaN" }
+  ]
+}

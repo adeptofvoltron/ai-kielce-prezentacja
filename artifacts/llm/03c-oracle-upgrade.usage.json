@@ -1,0 +1,14 @@
+{
+  "prompt": "03c-oracle-upgrade",
+  "model": "claude-sonnet-5",
+  "effort": "medium",
+  "startedAt": "2026-09-09T12:24:57Z",
+  "wallTimeSeconds": 421,
+  "turns": 2,
+  "costUSD": 2.3872557000000003,
+  "inputTokens": 4,
+  "outputTokens": 3514,
+  "cacheReadTokens": 223248,
+  "cacheCreationTokens": 2967,
+  "toolCalls": 52
+}

@@ -1,0 +1,954 @@
+==> 0/4 czyszczenie poprzedniego wyniku
+==> 1/4 kompilacja src/*.ts -> dist/*.js (SynTest nie parsuje TypeScriptu)
+==> ziarna semantyczne: seeds/semantic-seeds.js -> context constant pool
+    pula zawezona do grupy: CART_*
+    literalow tekstowych rozpatrzonych: 43
+    odrzuconych (znaki spoza alfabetu): 0
+    w puli: 42 tekstowych, 41 liczbowych
+==> 2/4 przeszukiwanie: DynaMOSA, seed=42, search-time=90s
+                                       
+ _____            _____            _   
+|   __| _ _  ___ |_   _| ___  ___ | |_ 
+|__   || | ||   |  | |  | -_||_ -||  _|
+|_____||_  ||_|_|  |_|  |___||___||_|  
+       |___|                           
+
+FID-1788957472087-uipD5AAJPr2FQ346TLzPWN
+[32minfo[39m:    Starting Flow with id: FID-1788957472087-uipD5AAJPr2FQ346TLzPWN
+[32minfo[39m:    Loading standard modules...
+[32minfo[39m:    Module loaded: @syntest/init
+[32minfo[39m:    Loading modules... [@syntest/javascript]
+[32minfo[39m:    Loading module: @syntest/javascript
+[32minfo[39m:    Module loaded: @syntest/javascript
+[32minfo[39m:    Tool loaded: init
+[32minfo[39m:    Tool loaded: javascript
+[32minfo[39m:    - Plugin loaded: Crossover - javascript-tree
+[32minfo[39m:    - Plugin loaded: Sampler - javascript-random
+[32minfo[39m:    - Plugin loaded: event-listener - SearchMetricListener
+[32minfo[39m:    - Plugin loaded: event-listener - SearchPerformanceListener
+[32minfo[39m:    - Plugin loaded: event-listener - SearchProgressBarListener
+[32minfo[39m:    - Plugin loaded: ObjectiveManager - simple
+[32minfo[39m:    - Plugin loaded: ObjectiveManager - structural
+[32minfo[39m:    - Plugin loaded: ObjectiveManager - structural-uncovered
+[32minfo[39m:    - Plugin loaded: ObjectiveManager - tracking
+[32minfo[39m:    - Plugin loaded: ObjectiveManager - uncovered
+[32minfo[39m:    - Plugin loaded: SecondaryObjective - length
+[32minfo[39m:    - Plugin loaded: Procreation - default
+[32minfo[39m:    - Plugin loaded: SearchAlgorithm - MOSAFamily
+[32minfo[39m:    - Plugin loaded: SearchAlgorithm - NSGAII
+[32minfo[39m:    - Plugin loaded: SearchAlgorithm - random
+[32minfo[39m:    - Plugin loaded: TerminationTrigger - signal
+[32minfo[39m:    Preset loaded: DynaMOSA
+[32minfo[39m:    Preset loaded: MOSA
+[32minfo[39m:    Preset loaded: NSGAII
+[32minfo[39m:    Preset loaded: random
+[32minfo[39m:    Configuring modules
+[32minfo[39m:    Setting preset
+[32minfo[39m:    No preset set
+
+ Module loaded: 
+
+  - Module: @syntest/init (0.2.1)
+    - Tools: 
+      - init: A tool for initializing SynTest projects.
+    - Plugins: []
+    - Presets: []
+  - Module: @syntest/javascript (0.1.0)
+    - Tools: 
+      - javascript: A tool for testing javascript projects.
+    - Plugins: 
+      - javascript-tree: A JavaScript tree crossover plugin
+      - javascript-random: A JavaScript random sampler plugin
+      - SearchMetricListener: A listener that collects statistics about the search process.
+      - SearchPerformanceListener: A listener that outputs the performance of the search algorithm.
+      - SearchProgressBarListener: A listener that creates and updates a progress bar for the search process.
+      - simple: A simple objective manager
+      - structural: A structural objective manager
+      - structural-uncovered: A structural uncovered objective manager
+      - tracking: A tracking objective manager
+      - uncovered: An uncovered objective manager
+      - length: Secondary objective based on the length of the test case
+      - default: A default procreation operator
+      - MOSAFamily: Many-Objective Sorting Algorithm
+      - NSGAII: NSGAII search algorithm
+      - random: Random search algorithm
+      - signal: Terminates the search when a signal is received
+    - Presets: 
+      - DynaMOSA: DynaMOSA preset
+      - MOSA: MOSA preset
+      - NSGAII: NSGAII preset
+      - random: Random preset
+
+[32minfo[39m:    Executing program...
+[32minfo[39m:    Plugin SearchMetricListener has 111 metrics: [series-measurement.objective-distance.search-time, series-measurement.objective-distance.total-time, series-measurement.objective-distance.evaluation, series-measurement.objective-distance.iteration, series.statements-covered.search-time, series.branches-covered.search-time, series.functions-covered.search-time, series.path-objectives-covered.search-time, series.branch-objectives-covered.search-time, series.exception-objectives-covered.search-time, series.function-objectives-covered.search-time, series.line-objectives-covered.search-time, series.implicit-branch-objectives-covered.search-time, series.objectives-covered.search-time, series.statements-covered.total-time, series.branches-covered.total-time, series.functions-covered.total-time, series.path-objectives-covered.total-time, series.branch-objectives-covered.total-time, series.exception-objectives-covered.total-time, series.function-objectives-covered.total-time, series.line-objectives-covered.total-time, series.implicit-branch-objectives-covered.total-time, series.objectives-covered.total-time, series.statements-covered.iteration, series.branches-covered.iteration, series.functions-covered.iteration, series.path-objectives-covered.iteration, series.branch-objectives-covered.iteration, series.exception-objectives-covered.iteration, series.function-objectives-covered.iteration, series.line-objectives-covered.iteration, series.implicit-branch-objectives-covered.iteration, series.objectives-covered.iteration, series.statements-covered.evaluation, series.branches-covered.evaluation, series.functions-covered.evaluation, series.path-objectives-covered.evaluation, series.branch-objectives-covered.evaluation, series.exception-objectives-covered.evaluation, series.function-objectives-covered.evaluation, series.line-objectives-covered.evaluation, series.implicit-branch-objectives-covered.evaluation, series.objectives-covered.evaluation, property.statements-total, property.branches-total, property.functions-total, property.path-objectives-total, property.branch-objectives-total, property.function-objectives-total, property.exception-objectives-total, property.line-objectives-total, property.implicit-branch-objectives-total, property.objectives-total, property.statements-covered, property.branches-covered, property.functions-covered, property.path-objectives-covered, property.branch-objectives-covered, property.function-objectives-covered, property.exception-objectives-covered, property.line-objectives-covered, property.implicit-branch-objectives-covered, property.objectives-covered, property.preset, property.target-root-directory, property.include, property.exclude, property.search-algorithm, property.population-size, property.objective-manager, property.secondary-objectives, property.procreation, property.crossover, property.sampler, property.termination-triggers, property.max-total-time, property.max-search-time, property.max-evaluations, property.max-iterations, property.test-minimization, property.random-seed, property.max-depth, property.max-action-statements, property.constant-pool-enabled, property.explore-illegal-values, property.resample-gene-probability, property.delta-mutation-probability, property.sample-existing-value-probability, property.multi-point-crossover-probability, property.crossover-probability, property.constant-pool-probability, property.sample-function-output-as-argument, property.string-alphabet, property.string-max-length, property.numeric-max-value, property.configuration, property.total-time, property.search-time, property.evaluations, property.iterations, property.initialization-time, property.pre-process-time, property.process-time, property.post-process-time, property.target-load-time, property.instrumentation-time, property.type-resolve-time, series.archive-size.total-time, property.archive-size, property.minimized-archive-size]
+[32minfo[39m:    Preparing modules...
+[32minfo[39m:    Preparing modules
+[32minfo[39m:    Modules prepared!
+[32minfo[39m:    Initialization started
+[32minfo[39m:    Creating directories
+[32minfo[39m:    Creating temp directories
+
+ GENERAL INFO 
+
+[32minfo[39m:    Initialization done
+[32minfo[39m:    Preprocessing started
+
+ TARGETS 
+
+  - /repo/dist/cart.js: cart.js #7
+    - object /repo/dist/cart.js:4:6:::7:1:::106:149
+    - class /repo/dist/cart.js:12:0:::65:1:::224:2040
+    - method /repo/dist/cart.js:13:4:::16:5:::241:317
+    - method /repo/dist/cart.js:17:4:::31:5:::322:889
+    - method /repo/dist/cart.js:33:4:::42:5:::947:1313
+    - method /repo/dist/cart.js:43:4:::52:5:::1318:1618
+    - method /repo/dist/cart.js:54:4:::64:5:::1662:2038
+
+╔══════════════════════════════════════╗
+║          SELECTION SETTINGS          ║
+╟───────────────────────┬──────────────╢
+║ Setting               │ Value        ║
+╟───────────────────────┼──────────────╢
+║ Target Root Directory │ dist         ║
+╟───────────────────────┼──────────────╢
+║ Target Include        │ dist/cart.js ║
+╟───────────────────────┼──────────────╢
+║ Target Exclude        │              ║
+╟───────────────────────┼──────────────╢
+║ Analysis Include      │ dist/**/*.js ║
+╟───────────────────────┼──────────────╢
+║ Analysis Exclude      │              ║
+╟───────────────────────┼──────────────╢
+║                       │              ║
+╚═══════════════════════╧══════════════╝
+
+╔══════════════════════════════════════════════════╗
+║                     SETTINGS                     ║
+╟───────────────────────────┬──────────────────────╢
+║ Setting                   │ Value                ║
+╟───────────────────────────┼──────────────────────╢
+║ Preset                    │ none                 ║
+╟───────────────────────────┼──────────────────────╢
+║ Search Algorithm          │ MOSAFamily           ║
+╟───────────────────────────┼──────────────────────╢
+║ Population Size           │ 50                   ║
+╟───────────────────────────┼──────────────────────╢
+║ Objective Manager         │ structural-uncovered ║
+╟───────────────────────────┼──────────────────────╢
+║ Secondary Objectives      │ []                   ║
+╟───────────────────────────┼──────────────────────╢
+║ Procreation Operator      │ default              ║
+╟───────────────────────────┼──────────────────────╢
+║ Crossover Operator        │ javascript-tree      ║
+╟───────────────────────────┼──────────────────────╢
+║ Sampling Operator         │ javascript-random    ║
+╟───────────────────────────┼──────────────────────╢
+║ Termination Triggers      │ [signal]             ║
+╟───────────────────────────┼──────────────────────╢
+║ Test Minimization Enabled │ true                 ║
+╟───────────────────────────┼──────────────────────╢
+║ Seed                      │ 42                   ║
+╟───────────────────────────┼──────────────────────╢
+║                           │                      ║
+╚═══════════════════════════╧══════════════════════╝
+
+╔═══════════════════════════════════════════════════╗
+║                  BUDGET SETTINGS                  ║
+╟────────────────────┬──────────────────────────────╢
+║ Setting            │ Value                        ║
+╟────────────────────┼──────────────────────────────╢
+║ Iteration Budget   │ 9007199254740991 iterations  ║
+╟────────────────────┼──────────────────────────────╢
+║ Evaluation Budget  │ 9007199254740991 evaluations ║
+╟────────────────────┼──────────────────────────────╢
+║ Search Time Budget │ 90 seconds                   ║
+╟────────────────────┼──────────────────────────────╢
+║ Total Time Budget  │ 120 seconds                  ║
+╟────────────────────┼──────────────────────────────╢
+║                    │                              ║
+╚════════════════════╧══════════════════════════════╝
+
+╔═══════════════════════════════════════════╗
+║             MUTATION SETTINGS             ║
+╟───────────────────────────────────┬───────╢
+║ Setting                           │ Value ║
+╟───────────────────────────────────┼───────╢
+║ Delta Mutation Probability        │ 0.8   ║
+╟───────────────────────────────────┼───────╢
+║ Crossover Probability             │ 0.7   ║
+╟───────────────────────────────────┼───────╢
+║ Multi-point Crossover Probability │ 0.5   ║
+╟───────────────────────────────────┼───────╢
+║ Max Depth                         │ 5     ║
+╟───────────────────────────────────┼───────╢
+║ Max Action Statements             │ 5     ║
+╟───────────────────────────────────┼───────╢
+║ Explore Illegal Values            │ false ║
+╟───────────────────────────────────┼───────╢
+║ Use Constant Pool Values          │ true  ║
+╟───────────────────────────────────┼───────╢
+║ Use Constant Pool Probability     │ 0.5   ║
+╟───────────────────────────────────┼───────╢
+║ Use Type Pool Values              │ true  ║
+╟───────────────────────────────────┼───────╢
+║ Use Type Pool Probability         │ 0.5   ║
+╟───────────────────────────────────┼───────╢
+║ Use Statement Pool Values         │ true  ║
+╟───────────────────────────────────┼───────╢
+║ Use Statement Pool Probability    │ 0.8   ║
+╟───────────────────────────────────┼───────╢
+║                                   │       ║
+╚═══════════════════════════════════╧═══════╝
+
+╔══════════════════════════════════════════════════╗
+║                  Type SETTINGS                   ║
+╟───────────────────────────────────┬──────────────╢
+║ Setting                           │ Value        ║
+╟───────────────────────────────────┼──────────────╢
+║ Type Inference Mode               │ proportional ║
+╟───────────────────────────────────┼──────────────╢
+║ Incorporate Execution Information │ true         ║
+╟───────────────────────────────────┼──────────────╢
+║ Random Type Probability           │ 0.1          ║
+╟───────────────────────────────────┼──────────────╢
+║                                   │              ║
+╚═══════════════════════════════════╧══════════════╝
+
+╔══════════════════════════════════╗
+║        DIRECTORY SETTINGS        ║
+╟───────────────────────┬──────────╢
+║ Setting               │ Value    ║
+╟───────────────────────┼──────────╢
+║ Syntest Directory     │ syntest  ║
+╟───────────────────────┼──────────╢
+║ Temporary Directory   │ .syntest ║
+╟───────────────────────┼──────────╢
+║ Target Root Directory │ dist     ║
+╟───────────────────────┼──────────╢
+║                       │          ║
+╚═══════════════════════╧══════════╝
+
+[32minfo[39m:    Instrumenting targets
+Unable to insert counter for node identifierDescription: VariableDeclaration
+[32minfo[39m:    Extracting types
+[32minfo[39m:    Resolving types
+[32minfo[39m:    Preprocessing done
+[32minfo[39m:    Processing started
+[32minfo[39m:    Processing cart.js
+[32minfo[39m:    Testing target cart.js in /repo/dist/cart.js
+[32minfo[39m:    Extracting constants
+[32minfo[39m:    Extracting constants done
+[32minfo[39m:    Starting search
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1)
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1)
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005)
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01)
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01)
+[32minfo[39m:    cart.js:45:8:::47:9:::1381:1462: 0.005 (lowest: 0.005)
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005)
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:45:8:::47:9:::1381:1462: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:45:8:::47:9:::1381:1462: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:45:8:::47:9:::1381:1462: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:45:8:::47:9:::1381:1462: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:45:8:::47:9:::1381:1462: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Consumed 0.010999917984008789s over the allocated search time
+[32minfo[39m:    Objective performance:
+[32minfo[39m:    cart.js:24:41:::24:67:::680:706: 1 (lowest: 1
+[32minfo[39m:    cart.js:37:41:::37:67:::1140:1166: 1 (lowest: 1
+[32minfo[39m:    cart.js:38:8:::40:9:::1177:1264: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:57:12:::59:13:::1751:1849: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:56:8:::61:9:::1706:1921: 1.01 (lowest: 1.01
+[32minfo[39m:    cart.js:29:12:::29:46:::839:873: 0.005 (lowest: 0.005
+[32minfo[39m:    cart.js:48:8:::50:9:::1471:1580: 0.005 (lowest: 0.005
+[32minfo[39m:    Consumed 0.01699995994567871s over the allocated search time
+[32minfo[39m:    Consumed 0.01699995994567871s over the allocated search time
+[32minfo[39m:    Consumed 0.01699995994567871s over the allocated search time
+[32minfo[39m:    Consumed 0.01699995994567871s over the allocated search time
+██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 16% | ETA: INFs | 16/100 | 0 | cart.js
+[32minfo[39m:    Finished testing target cart.js in /repo/dist/cart.js
+[32minfo[39m:    Processing done
+[32minfo[39m:    Postprocessing started
+
+ SEARCH RESULTS 
+
+╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                         Coverage                                                          ║
+╟──────────────────┬───────────┬─────────┬─────────────────────┬────────────────────────────────────────────────────────────╢
+║ Target           │ Statement │ Branch  │ Function            │ File                                                       ║
+╟──────────────────┼───────────┼─────────┼─────────────────────┼────────────────────────────────────────────────────────────╢
+║ cart.js: cart.js │ 40 / 50   │ 11 / 16 │ 5 / 7               │ /repo/dist/cart.js ║
+╟──────────────────┼───────────┼─────────┼─────────────────────┼────────────────────────────────────────────────────────────╢
+║ Average          │ 80 %      │ 68.75 % │ 71.42857142857143 % │                                                            ║
+╚══════════════════╧═══════════╧═════════╧═════════════════════╧════════════════════════════════════════════════════════════╝
+
+[32minfo[39m:    Postprocessing done
+[32minfo[39m:    Exiting
+[32minfo[39m:    Deleting temporary directories
+[32minfo[39m:    Cleaning up...
+[32minfo[39m:    Running metric middleware pipeline
+[32minfo[39m:    Cleaning up modules
+==> 3/4 wynik surowy: syntest/FID-1788957472087-uipD5AAJPr2FQ346TLzPWN/tests
+==> 4/4 transformacja mocha+chai/dist -> vitest+TS/src
+  tests/cart.sbst.test.ts: 32 testow, 47 asercji (importy: cart)
+
+gotowe. testy w tests/*.sbst.test.ts, surowy wynik w artifacts/syntest-raw/
