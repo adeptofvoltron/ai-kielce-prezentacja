@@ -1,0 +1,197 @@
+{
+  "branch": "demo/01-llm-only",
+  "label": "llm-only (c)",
+  "generatedAt": "2026-09-09T12:46:36.263Z",
+  "node": "v24.16.0",
+  "suite": {
+    "files": 4,
+    "lines": 619,
+    "testCases": 59,
+    "tests": 59,
+    "assertions": 113,
+    "assertionsPerTest": 1.92,
+    "genericTestNames": 0
+  },
+  "coverage": {
+    "total": {
+      "lines": {
+        "total": 125,
+        "covered": 123,
+        "skipped": 0,
+        "pct": 98.4
+      },
+      "statements": {
+        "total": 125,
+        "covered": 123,
+        "skipped": 0,
+        "pct": 98.4
+      },
+      "functions": {
+        "total": 8,
+        "covered": 8,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 63,
+        "covered": 62,
+        "skipped": 0,
+        "pct": 98.41
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": "Unknown"
+      }
+    },
+    "cart.ts": {
+      "lines": {
+        "total": 53,
+        "covered": 51,
+        "skipped": 0,
+        "pct": 96.22
+      },
+      "functions": {
+        "total": 5,
+        "covered": 5,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 53,
+        "covered": 51,
+        "skipped": 0,
+        "pct": 96.22
+      },
+      "branches": {
+        "total": 25,
+        "covered": 24,
+        "skipped": 0,
+        "pct": 96
+      }
+    },
+    "invoiceId.ts": {
+      "lines": {
+        "total": 19,
+        "covered": 19,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 19,
+        "covered": 19,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 10,
+        "covered": 10,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "loyalty.ts": {
+      "lines": {
+        "total": 21,
+        "covered": 21,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 21,
+        "covered": 21,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 11,
+        "covered": 11,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "pricing.ts": {
+      "lines": {
+        "total": 32,
+        "covered": 32,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 32,
+        "covered": 32,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 17,
+        "covered": 17,
+        "skipped": 0,
+        "pct": 100
+      }
+    }
+  },
+  "oracles": {
+    "loyaltySpecDeviation": {
+      "patch": "patches/fix-loyalty.patch",
+      "testPattern": "tests/loyalty",
+      "verdict": "caught",
+      "caughtBy": [
+        "awardPoints - docs/SPEC.md sekcja 3 przelicznik 1 punkt za 10 zl zaokragla w gore wartosci powyzej polowy",
+        "awardPoints - docs/SPEC.md sekcja 3 przelicznik 1 punkt za 10 zl przy dokladnej polowie zaokragla do liczby parzystej (metoda bankierska)",
+        "awardPoints - docs/SPEC.md sekcja 3 mnoznik VIP podwaja punkty klientowi o sumie zakupow co najmniej 5000 zl",
+        "awardPoints - docs/SPEC.md sekcja 3 mnoznik VIP stosuje mnoznik VIP do punktow po zaokragleniu bankierskim"
+      ],
+      "cementedBy": []
+    },
+    "cartUnderflowCrash": {
+      "patch": "patches/fix-cart-underflow.patch",
+      "testPattern": "tests/cart",
+      "verdict": "silent",
+      "caughtBy": [],
+      "cementedBy": []
+    },
+    "couponPrototypeChain": {
+      "patch": "patches/fix-coupon-prototype.patch",
+      "testPattern": "tests/cart",
+      "verdict": "caught",
+      "caughtBy": [
+        "Cart - docs/SPEC.md sekcja 4 applyCoupon odrzuca kody, ktore nie sa kuponami, a sa nazwami wlasnosci obiektu"
+      ],
+      "cementedBy": []
+    }
+  },
+  "mutation": {
+    "score": 95,
+    "killed": 209,
+    "survived": 7,
+    "timeout": 0,
+    "noCoverage": 4,
+    "perFile": {
+      "src/cart.ts": 89.53,
+      "src/invoiceId.ts": 97.37,
+      "src/loyalty.ts": 97.96,
+      "src/pricing.ts": 100
+    },
+    "state": "kod-poprawiony"
+  }
+}

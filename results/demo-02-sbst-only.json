@@ -1,0 +1,195 @@
+{
+  "branch": "demo/02-sbst-only",
+  "label": "demo/02-sbst-only",
+  "generatedAt": "2026-09-09T12:43:25.264Z",
+  "node": "v24.16.0",
+  "suite": {
+    "files": 4,
+    "lines": 3929,
+    "testCases": 96,
+    "tests": 96,
+    "assertions": 156,
+    "assertionsPerTest": 1.63,
+    "genericTestNames": 96
+  },
+  "coverage": {
+    "total": {
+      "lines": {
+        "total": 125,
+        "covered": 101,
+        "skipped": 0,
+        "pct": 80.8
+      },
+      "statements": {
+        "total": 125,
+        "covered": 101,
+        "skipped": 0,
+        "pct": 80.8
+      },
+      "functions": {
+        "total": 8,
+        "covered": 8,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 55,
+        "covered": 48,
+        "skipped": 0,
+        "pct": 87.27
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": "Unknown"
+      }
+    },
+    "cart.ts": {
+      "lines": {
+        "total": 53,
+        "covered": 41,
+        "skipped": 0,
+        "pct": 77.35
+      },
+      "functions": {
+        "total": 5,
+        "covered": 5,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 53,
+        "covered": 41,
+        "skipped": 0,
+        "pct": 77.35
+      },
+      "branches": {
+        "total": 21,
+        "covered": 17,
+        "skipped": 0,
+        "pct": 80.95
+      }
+    },
+    "invoiceId.ts": {
+      "lines": {
+        "total": 19,
+        "covered": 9,
+        "skipped": 0,
+        "pct": 47.36
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 19,
+        "covered": 9,
+        "skipped": 0,
+        "pct": 47.36
+      },
+      "branches": {
+        "total": 5,
+        "covered": 3,
+        "skipped": 0,
+        "pct": 60
+      }
+    },
+    "loyalty.ts": {
+      "lines": {
+        "total": 21,
+        "covered": 19,
+        "skipped": 0,
+        "pct": 90.47
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 21,
+        "covered": 19,
+        "skipped": 0,
+        "pct": 90.47
+      },
+      "branches": {
+        "total": 11,
+        "covered": 10,
+        "skipped": 0,
+        "pct": 90.9
+      }
+    },
+    "pricing.ts": {
+      "lines": {
+        "total": 32,
+        "covered": 32,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 32,
+        "covered": 32,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 18,
+        "covered": 18,
+        "skipped": 0,
+        "pct": 100
+      }
+    }
+  },
+  "oracles": {
+    "loyaltySpecDeviation": {
+      "patch": "patches/fix-loyalty.patch",
+      "testPattern": "tests/loyalty",
+      "verdict": "cemented",
+      "caughtBy": [],
+      "cementedBy": [
+        "loyalty Test 11 for 'loyalty'",
+        "loyalty Test 17 for 'loyalty'",
+        "loyalty Test 23 for 'loyalty'",
+        "loyalty Test 27 for 'loyalty'"
+      ]
+    },
+    "cartUnderflowCrash": {
+      "patch": "patches/fix-cart-underflow.patch",
+      "testPattern": "tests/cart",
+      "verdict": "silent",
+      "caughtBy": [],
+      "cementedBy": []
+    },
+    "couponPrototypeChain": {
+      "patch": "patches/fix-coupon-prototype.patch",
+      "testPattern": "tests/cart",
+      "verdict": "silent",
+      "caughtBy": [],
+      "cementedBy": []
+    }
+  },
+  "mutation": {
+    "score": 62.5,
+    "killed": 120,
+    "survived": 31,
+    "timeout": 0,
+    "noCoverage": 41,
+    "perFile": {
+      "src/cart.ts": 50,
+      "src/invoiceId.ts": 28.95,
+      "src/loyalty.ts": 83.87,
+      "src/pricing.ts": 95.74
+    },
+    "state": "kod-z-defektami"
+  }
+}

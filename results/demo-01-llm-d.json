@@ -1,0 +1,197 @@
+{
+  "branch": "demo/01-llm-only",
+  "label": "llm-d",
+  "generatedAt": "2026-09-09T12:45:39.110Z",
+  "node": "v24.16.0",
+  "suite": {
+    "files": 4,
+    "lines": 686,
+    "testCases": 88,
+    "tests": 88,
+    "assertions": 116,
+    "assertionsPerTest": 1.32,
+    "genericTestNames": 0
+  },
+  "coverage": {
+    "total": {
+      "lines": {
+        "total": 125,
+        "covered": 123,
+        "skipped": 0,
+        "pct": 98.4
+      },
+      "statements": {
+        "total": 125,
+        "covered": 123,
+        "skipped": 0,
+        "pct": 98.4
+      },
+      "functions": {
+        "total": 8,
+        "covered": 8,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 67,
+        "covered": 66,
+        "skipped": 0,
+        "pct": 98.5
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": "Unknown"
+      }
+    },
+    "cart.ts": {
+      "lines": {
+        "total": 53,
+        "covered": 53,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 5,
+        "covered": 5,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 53,
+        "covered": 53,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 28,
+        "covered": 28,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "invoiceId.ts": {
+      "lines": {
+        "total": 19,
+        "covered": 19,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 19,
+        "covered": 19,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 10,
+        "covered": 10,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "loyalty.ts": {
+      "lines": {
+        "total": 21,
+        "covered": 19,
+        "skipped": 0,
+        "pct": 90.47
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 21,
+        "covered": 19,
+        "skipped": 0,
+        "pct": 90.47
+      },
+      "branches": {
+        "total": 11,
+        "covered": 10,
+        "skipped": 0,
+        "pct": 90.9
+      }
+    },
+    "pricing.ts": {
+      "lines": {
+        "total": 32,
+        "covered": 32,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 32,
+        "covered": 32,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 18,
+        "covered": 18,
+        "skipped": 0,
+        "pct": 100
+      }
+    }
+  },
+  "oracles": {
+    "loyaltySpecDeviation": {
+      "patch": "patches/fix-loyalty.patch",
+      "testPattern": "tests/loyalty",
+      "verdict": "caught",
+      "caughtBy": [
+        "awardPoints Points calculation - 1 point per 10 PLN awards 1 point for order 15 PLN (1.5 points rounds to 2 with banker's rounding)",
+        "awardPoints Points calculation - 1 point per 10 PLN awards 3 points for order 26 PLN (2.6 points rounds to 3)",
+        "awardPoints VIP multiplier - 2x points for lifetime spend >= 5000 PLN applies 2x multiplier when lifetimeSpend is exactly 5000 PLN",
+        "awardPoints VIP multiplier - 2x points for lifetime spend >= 5000 PLN applies 2x multiplier to rounded points",
+        "awardPoints Points cap - max 5000 points per order (after VIP multiplier) caps points at 5000 even when order value would exceed after 2x multiplier",
+        "awardPoints Points cap - max 5000 points per order (after VIP multiplier) allows points below cap for VIP",
+        "awardPoints Points cap - max 5000 points per order (after VIP multiplier) caps at exactly 5000 when VIP multiplier would result in cap",
+        "awardPoints Integration scenarios calculates points for regular customer with small order",
+        "awardPoints Integration scenarios calculates points for customer transitioning to VIP at threshold"
+      ],
+      "cementedBy": []
+    },
+    "cartUnderflowCrash": {
+      "patch": "patches/fix-cart-underflow.patch",
+      "testPattern": "tests/cart",
+      "verdict": "cemented",
+      "caughtBy": [],
+      "cementedBy": [
+        "Cart remove() - Removing items allows negative quantity after removal (underflow)"
+      ]
+    },
+    "couponPrototypeChain": {
+      "patch": "patches/fix-coupon-prototype.patch",
+      "testPattern": "tests/cart",
+      "verdict": "silent",
+      "caughtBy": [],
+      "cementedBy": []
+    }
+  },
+  "mutation": {
+    "state": "niemierzalne",
+    "score": 0,
+    "killed": 0,
+    "survived": 0,
+    "timeout": 0,
+    "noCoverage": 0,
+    "perFile": {}
+  }
+}
