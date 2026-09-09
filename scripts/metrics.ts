@@ -1,0 +1,308 @@
+/**
+ * Harness metryk. Jeden i ten sam pomiar dla kazdego brancha.
+ *
+ * Uwaga metodologiczna: ten plik powstal PRZED wygenerowaniem jakichkolwiek
+ * testow. Metryka nie byla dopasowywana do wynikow.
+ *
+ * Uzycie:
+ *   npx tsx scripts/metrics.ts [--no-mutation] [--label NAZWA]
+ *
+ * Wynik: results/<branch>.json
+ */
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { globSync } from "node:fs";
+import { resolve } from "node:path";
+
+const repoRoot = resolve(import.meta.dirname, "..");
+
+// --- pomocnicze ------------------------------------------------------------
+
+function sh(command: string, args: string[]): { code: number; stdout: string } {
+  try {
+    const stdout = execFileSync(command, args, {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    return { code: 0, stdout };
+  } catch (error) {
+    const e = error as { status?: number; stdout?: string; stderr?: string };
+    return { code: e.status ?? 1, stdout: (e.stdout ?? "") + (e.stderr ?? "") };
+  }
+}
+
+function currentBranch(): string {
+  return sh("git", ["rev-parse", "--abbrev-ref", "HEAD"]).stdout.trim() || "detached";
+}
+
+/** Nakłada patch, wykonuje pomiar, zawsze cofa patch. */
+function withPatch<T>(patchFile: string, measure: () => T): T {
+  sh("git", ["apply", patchFile]);
+  try {
+    return measure();
+  } finally {
+    sh("git", ["apply", "-R", patchFile]);
+  }
+}
+
+// --- vitest ----------------------------------------------------------------
+
+interface RunResult {
+  passed: boolean;
+  numTests: number;
+  numFailed: number;
+}
+
+function runTests(patterns: string[] = []): RunResult {
+  const outputFile = resolve(repoRoot, ".coverage/vitest-run.json");
+  const result = sh("npx", [
+    "vitest",
+    "run",
+    ...patterns,
+    "--passWithNoTests",
+    "--reporter=json",
+    `--outputFile=${outputFile}`,
+  ]);
+
+  let numTests = 0;
+  let numFailed = 0;
+  if (existsSync(outputFile)) {
+    const report = JSON.parse(readFileSync(outputFile, "utf8")) as {
+      numTotalTests?: number;
+      numFailedTests?: number;
+    };
+    numTests = report.numTotalTests ?? 0;
+    numFailed = report.numFailedTests ?? 0;
+  }
+
+  return { passed: result.code === 0, numTests, numFailed };
+}
+
+interface CoverageEntry {
+  lines: { pct: number };
+  branches: { pct: number };
+  functions: { pct: number };
+  statements: { pct: number };
+}
+
+function measureCoverage(): Record<string, CoverageEntry> {
+  sh("npx", [
+    "vitest",
+    "run",
+    "--passWithNoTests",
+    "--coverage",
+    "--coverage.reporter=json-summary",
+  ]);
+
+  const summaryPath = resolve(repoRoot, ".coverage/coverage-summary.json");
+  if (!existsSync(summaryPath)) {
+    return {};
+  }
+
+  const raw = JSON.parse(readFileSync(summaryPath, "utf8")) as Record<string, CoverageEntry>;
+  const out: Record<string, CoverageEntry> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const short = key === "total" ? "total" : key.split("/src/")[1] ?? key;
+    out[short] = value;
+  }
+  return out;
+}
+
+// --- mutacje ---------------------------------------------------------------
+
+interface MutationSummary {
+  score: number;
+  killed: number;
+  survived: number;
+  timeout: number;
+  noCoverage: number;
+  perFile: Record<string, number>;
+}
+
+function measureMutation(): MutationSummary | null {
+  const result = sh("npx", ["stryker", "run"]);
+  const reportPath = resolve(repoRoot, "reports/mutation/mutation.json");
+  if (!existsSync(reportPath)) {
+    console.error("  (stryker nie wyprodukowal raportu; exit=" + result.code + ")");
+    return null;
+  }
+
+  const report = JSON.parse(readFileSync(reportPath, "utf8")) as {
+    files: Record<string, { mutants: { status: string }[] }>;
+  };
+
+  const tally = { killed: 0, survived: 0, timeout: 0, noCoverage: 0 };
+  const perFile: Record<string, number> = {};
+
+  for (const [path, file] of Object.entries(report.files)) {
+    const local = { killed: 0, survived: 0, timeout: 0, noCoverage: 0 };
+    for (const mutant of file.mutants) {
+      const bucket =
+        mutant.status === "Killed"
+          ? "killed"
+          : mutant.status === "Survived"
+            ? "survived"
+            : mutant.status === "Timeout"
+              ? "timeout"
+              : mutant.status === "NoCoverage"
+                ? "noCoverage"
+                : null;
+      if (bucket !== null) {
+        local[bucket] += 1;
+        tally[bucket] += 1;
+      }
+    }
+    const denominator = local.killed + local.timeout + local.survived + local.noCoverage;
+    perFile[path.split("/src/")[1] ?? path] =
+      denominator === 0 ? 0 : round2(((local.killed + local.timeout) / denominator) * 100);
+  }
+
+  const denominator = tally.killed + tally.timeout + tally.survived + tally.noCoverage;
+  return {
+    score: denominator === 0 ? 0 : round2(((tally.killed + tally.timeout) / denominator) * 100),
+    ...tally,
+    perFile,
+  };
+}
+
+// --- oracle: Fails Without / Passes With ------------------------------------
+
+type OracleVerdict = "caught" | "cemented" | "silent";
+
+interface OracleResult {
+  patch: string;
+  testPattern: string;
+  failsOnBuggyCode: boolean;
+  passesOnFixedCode: boolean;
+  verdict: OracleVerdict;
+}
+
+/**
+ * Rozstrzyga, co suite zrobil z zasianym defektem:
+ *   caught    - nie przechodzi na zabugowanym kodzie, przechodzi na poprawionym
+ *   cemented  - przechodzi na zabugowanym, nie przechodzi na poprawionym
+ *               (testy utrwalily blad jako oczekiwane zachowanie)
+ *   silent    - defekt w ogole nie zostal dotkniety
+ */
+function checkOracle(patchFile: string, testPattern: string): OracleResult {
+  const onBuggy = runTests([testPattern]);
+  const onFixed = withPatch(patchFile, () => runTests([testPattern]));
+
+  let verdict: OracleVerdict;
+  if (!onBuggy.passed && onFixed.passed) {
+    verdict = "caught";
+  } else if (onBuggy.passed && !onFixed.passed) {
+    verdict = "cemented";
+  } else {
+    verdict = "silent";
+  }
+
+  return {
+    patch: patchFile,
+    testPattern,
+    failsOnBuggyCode: !onBuggy.passed,
+    passesOnFixedCode: onFixed.passed,
+    verdict,
+  };
+}
+
+// --- rozmiar i czytelnosc suite ---------------------------------------------
+
+interface SuiteShape {
+  files: number;
+  lines: number;
+  tests: number;
+  assertions: number;
+  assertionsPerTest: number;
+  genericTestNames: number;
+}
+
+function measureSuiteShape(): SuiteShape {
+  const files = globSync("tests/**/*.test.ts", { cwd: repoRoot });
+  let lines = 0;
+  let tests = 0;
+  let assertions = 0;
+  let genericTestNames = 0;
+
+  for (const file of files) {
+    const source = readFileSync(resolve(repoRoot, file), "utf8");
+    lines += source.split("\n").length;
+    tests += (source.match(/\bit\(/g) ?? []).length;
+    assertions += (source.match(/expect\(/g) ?? []).length;
+    // "Test 7 for 'cart'" - nazwa nie mowiaca nic o intencji
+    genericTestNames += (source.match(/it\("Test \d+ for/g) ?? []).length;
+  }
+
+  return {
+    files: files.length,
+    lines,
+    tests,
+    assertions,
+    assertionsPerTest: tests === 0 ? 0 : round2(assertions / tests),
+    genericTestNames,
+  };
+}
+
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+// --- main ------------------------------------------------------------------
+
+const args = process.argv.slice(2);
+const skipMutation = args.includes("--no-mutation");
+const labelIndex = args.indexOf("--label");
+const label = labelIndex === -1 ? undefined : args[labelIndex + 1];
+
+const branch = currentBranch();
+console.log(`==> metryki dla brancha: ${branch}`);
+
+console.log("==> kształt suite");
+const suite = measureSuiteShape();
+
+console.log("==> pokrycie (vitest + v8)");
+const coverage = measureCoverage();
+
+console.log("==> oracle: punkty lojalnosciowe (rozbieznosc kod <-> specyfikacja)");
+const loyaltyOracle = checkOracle("patches/fix-loyalty.patch", "tests/loyalty");
+
+console.log("==> oracle: awaria koszyka (underflow przy sekwencji wywolan)");
+const cartOracle = checkOracle("patches/fix-cart-underflow.patch", "tests/cart");
+
+let mutation: MutationSummary | null = null;
+if (skipMutation) {
+  console.log("==> mutacje: pominiete (--no-mutation)");
+} else {
+  console.log("==> mutacje (stryker) - to trwa najdluzej");
+  mutation = measureMutation();
+}
+
+const report = {
+  branch,
+  label: label ?? branch,
+  generatedAt: new Date().toISOString(),
+  node: process.version,
+  suite,
+  coverage,
+  oracles: {
+    loyaltySpecDeviation: loyaltyOracle,
+    cartUnderflowCrash: cartOracle,
+  },
+  mutation,
+};
+
+mkdirSync(resolve(repoRoot, "results"), { recursive: true });
+const outputPath = resolve(repoRoot, `results/${branch.replace(/\//g, "-")}.json`);
+writeFileSync(outputPath, JSON.stringify(report, null, 2) + "\n");
+
+console.log(`\ngotowe -> ${outputPath}`);
+console.log(
+  `  pokrycie galezi: ${coverage["total"]?.branches.pct ?? "?"}%  ` +
+    `mutation score: ${mutation?.score ?? "?"}  ` +
+    `testow: ${suite.tests}`,
+);
+console.log(
+  `  oracle loyalty: ${loyaltyOracle.verdict}   oracle cart: ${cartOracle.verdict}`,
+);

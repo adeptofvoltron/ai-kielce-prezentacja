@@ -1,0 +1,12 @@
+--- a/src/cart.ts
++++ b/src/cart.ts
+@@ -43,6 +43,9 @@
+     if (existing === undefined) {
+       throw new Error("sku not in cart");
+     }
++    if (qty > existing.qty) {
++      throw new RangeError("cannot remove more items than the cart holds");
++    }
+     existing.qty = existing.qty - qty;
+   }
+ 

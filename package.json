@@ -1,0 +1,33 @@
+{
+  "name": "ai-kielce-prezentacja",
+  "version": "1.0.0",
+  "description": "Dowod empiryczny: testy generowane przez LLM vs SBST vs hybryda neuro-symboliczna",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "mutation": "stryker run",
+    "sbst": "bash scripts/run-syntest.sh",
+    "metrics": "tsx scripts/metrics.ts",
+    "compare": "tsx scripts/compare.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
+    "@syntest/cli": "0.2.1",
+    "@syntest/javascript": "0.1.0",
+    "@types/node": "26.5.0",
+    "@vitest/coverage-v8": "2.1.9",
+    "chai": "4.5.0",
+    "chai-as-promised": "7.1.2",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3",
+    "vitest": "2.1.9"
+  },
+  "private": true
+}

@@ -1,0 +1,37 @@
+{
+  "modules": ["@syntest/javascript"],
+
+  "target-root-directory": "./dist",
+  "target-include": ["./dist/**/*.js"],
+  "target-exclude": [],
+  "analysis-include": [],
+  "analysis-exclude": [],
+
+  "search-algorithm": "MOSAFamily",
+  "objective-manager": "structural-uncovered",
+  "procreation": "default",
+  "crossover": "javascript-tree",
+  "sampler": "javascript-random",
+  "secondary-objectives": [],
+  "population-size": 50,
+
+  "total-time": 120,
+  "search-time": 90,
+
+  "max-depth": 5,
+  "max-action-statements": 5,
+  "test-minimization": true,
+
+  "constant-pool": true,
+  "constant-pool-probability": 0.5,
+  "type-pool": true,
+  "type-pool-probability": 0.5,
+  "statement-pool": true,
+  "statement-pool-probability": 0.8,
+  "type-inference-mode": "proportional",
+  "random-type-probability": 0.1,
+
+  "console-log-level": "info",
+  "syntax-forgiving": true,
+  "silence-test-output": true
+}

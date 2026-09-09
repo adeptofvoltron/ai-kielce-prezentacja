@@ -1,0 +1,34 @@
+--- a/src/loyalty.ts
++++ b/src/loyalty.ts
+@@ -1,6 +1,19 @@
+ const VIP_THRESHOLD_PLN = 5000;
+ const POINTS_CAP = 5000;
+ 
++/** Zaokraglenie bankierskie (half-to-even). */
++function roundHalfToEven(value: number): number {
++  const lower = Math.floor(value);
++  const remainder = value - lower;
++  if (remainder > 0.5) {
++    return lower + 1;
++  }
++  if (remainder < 0.5) {
++    return lower;
++  }
++  return lower % 2 === 0 ? lower : lower + 1;
++}
++
+ /**
+  * Punkty lojalnosciowe przyznane za zamowienie.
+  * Regula biznesowa: docs/SPEC.md, sekcja 3.
+@@ -16,9 +29,9 @@
+     throw new RangeError("amounts must not be negative");
+   }
+ 
+-  let points = Math.floor(orderValuePLN / 10);
++  let points = roundHalfToEven(orderValuePLN / 10);
+ 
+-  if (lifetimeSpendPLN > VIP_THRESHOLD_PLN) {
++  if (lifetimeSpendPLN >= VIP_THRESHOLD_PLN) {
+     points = points * 2;
+   }
+ 
