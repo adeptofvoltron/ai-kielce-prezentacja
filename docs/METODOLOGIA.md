@@ -154,6 +154,18 @@ poprawnie wykrywa zasiany defekt, **nie przechodzi** - i wlasnie tym branchom
 harness zerowal pokrycie, podczas gdy branche utrwalajace blad dostawaly pelne
 liczby. `vitest.config.ts` ustawia wiec `reportOnFailure: true`.
 
+## Higiena artefaktow
+
+Pliki w `artifacts/` sa dowodem: pelne transkrypty `claude -p` (kazde
+wywolanie narzedzia, kazda komenda) i surowe wyjscie SynTesta przed
+transformacja. Jedna rzecz jest w nich zmieniona wobec oryginalu: absolutna
+sciezka katalogu roboczego zostala podmieniona na `/repo`, skryptem
+`scripts/normalize-artifacts.sh`. Zadna wartosc, asercja ani komunikat bledu
+nie jest ruszany - tylko prefiks sciezki.
+
+Testy w `tests/` sa czyszczone ze sciezek juz w trakcie transformacji
+(`scripts/syntest-to-vitest.ts`, punkt 4).
+
 ## Powtarzalnosc
 
 SBST jest stochastyczny. Kazdy pomiar branchy SBST i hybrydowego jest
