@@ -10,7 +10,9 @@
     "mutation": "stryker run",
     "sbst": "bash scripts/run-syntest.sh",
     "metrics": "tsx scripts/metrics.ts",
-    "compare": "tsx scripts/compare.ts"
+    "compare": "tsx scripts/compare.ts",
+    "collect": "bash scripts/collect-results.sh",
+    "appendix:dilution": "bash scripts/run-syntest.sh --seed 42 --search-time 90 --seeds seeds/semantic-seeds.js --seed-group CART_ --only-target cart"
   },
   "keywords": [],
   "author": "",
