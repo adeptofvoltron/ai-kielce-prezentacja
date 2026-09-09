@@ -69,7 +69,15 @@ export function transform(inputPath: string, outputPath: string): TransformRepor
   //    SynTest emituje jedna linie `let X;` na binding.
   source = source.replace(/^\tlet ([A-Za-z0-9_$]+);$/gm, "\tlet $1: any;");
 
-  // 4. Higiena: SynTest wkleja absolutne sciezki w komentarzach z metadanymi.
+  // 4. Pusty literal tablicowy bez adnotacji to `any[]` w miejscu, gdzie
+  //    `noImplicitAny` tego nie przepuszcza (TS7034/TS7005). Sampler
+  //    generuje `const qty = []` jako wartosc wejsciowa.
+  source = source.replace(
+    /^(\t+)const ([A-Za-z0-9_$]+) = \[\]$/gm,
+    "$1const $2: any[] = []",
+  );
+
+  // 5. Higiena: SynTest wkleja absolutne sciezki w komentarzach z metadanymi.
   //    Skracamy je do wzglednych, zeby commity byly niezalezne od maszyny.
   source = source.split(repoRoot + "/").join("");
   source = source.split(repoRoot).join(".");
