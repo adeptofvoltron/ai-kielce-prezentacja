@@ -149,3 +149,92 @@ z nazwy pliku - efekt byl taki, ze 39 z 82 testow padalo na
 
 `scripts/syntest-to-vitest.ts` czyta wiec mapowanie binding -> modul
 z samego bloku `beforeEach`, a nie z nazwy pliku.
+
+---
+
+## Ustalenia z wstrzykiwania ziaren semantycznych
+
+Cztery kolejne rzeczy, ktore wyszly dopiero przy branchu hybrydowym.
+
+### `--analysis-include` przyjmuje tylko sciezki wewnatrz katalogu celow
+
+Naturalne wywolanie:
+
+```bash
+npx syntest javascript test --analysis-include seeds/semantic-seeds.js
+```
+
+konczy sie na:
+
+```
+Error: The given path is not in the given root path!
+```
+
+Pliki analizowane musza lezec wewnatrz `--target-root-directory` (u nas
+`./dist`). Plik z ziarnami jest wiec kopiowany do `dist/__semantic_seeds__.js`.
+
+### `--target-exclude` nie wyklucza pliku z listy celow
+
+Po skopiowaniu ziaren do `dist/` wpadaja one pod glob `./dist/**/*.js`,
+czyli staja sie **celem** generacji testow. Oczywista proba:
+
+```bash
+--target-exclude "./dist/__semantic_seeds__.js"
+```
+
+nie dziala - narzedzie raportuje `Target Exclude` w tabeli konfiguracji,
+a potem i tak wypisuje `Processing __semantic_seeds__.js` i traci na ten plik
+caly slot budzetu. `scripts/run-syntest.sh` podaje wiec **jawna liste celow**,
+zbudowana z `src/*.ts`, zamiast polegac na globie.
+
+### Literal spoza alfabetu samplera konczy przebieg bez zadnego testu
+
+To bylo najdrozsze do znalezienia. Przebieg z ziarnami raportowal poprawna
+tabele pokrycia, a katalog wyniku zawieral **tylko logi** - zero plikow
+testowych. W logu, miedzy ostrzezeniami, powtarzalo sie:
+
+```
+warn:  Cannot search for character missing from the sampling alphabet
+TypeError: Cannot read properties of undefined (reading 'name')
+    at .../search-javascript/lib/testcase/execution/TestExecutor.ts:130
+```
+
+Przyczyna jest w `@syntest/search-javascript` 0.1.0,
+`dist/lib/testcase/execution/TestExecutor.js:85`:
+
+```js
+error: status === JavaScriptExecutionStatus.FAILED
+    ? { name: test.err.name, message: test.err.message, stack: test.err.stack }
+    : undefined,
+```
+
+`test.err` nie jest sprawdzane. Kazda awaria mochy bez obiektu bledu zabija
+proces potomny wykonujacy testy, a przebieg konczy sie bez wyniku. Wersja
+beta ma juz warunek `test.err ? test.err.name : ""`.
+
+Ziarna zawieraly trzy literaly ze znakami spoza 100-znakowego alfabetu
+samplera (`string-alphabet` w `@syntest/base-language/dist/lib/Configuration.js`):
+numer faktury cyframi arabsko-indyjskimi, ten sam cyframi pelnej szerokosci
+i emoji flagi. Byly to celowo nieoczywiste naruszenia formatu - dokladnie to,
+o co prosil prompt - tylko ze narzedzie nie umie na nich pracowac.
+
+Rozwiazanie: `scripts/filter-seeds.mjs` odrzuca literaly zawierajace znaki
+spoza alfabetu, czytajac ten alfabet z definicji opcji narzedzia. Oryginalny
+artefakt LLM-a zostaje nietkniety w `seeds/`; do przeszukiwania idzie wersja
+przefiltrowana. Po tej zmianie przebieg konczy sie zerem wywrotek dekodera.
+
+### Beta nie jest wyjsciem
+
+Skoro beta ma poprawiony `TestExecutor`, naturalnym odruchem jest upgrade:
+
+```bash
+npm i -D @syntest/javascript@0.2.0-beta.25
+# IllegalStateError: Should call setupLogger function before using getLogger function!
+
+npm i -D @syntest/cli@0.3.0-beta.8      # dopasowanie wersji CLI
+# TypeError: chalk.greenBright is not a function
+```
+
+Beta ciagnie chalk v5 (tylko ESM) do kodu CJS. Repozytorium zostaje wiec przy
+stabilnej parze `@syntest/cli@0.2.1` + `@syntest/javascript@0.1.0`, a problem
+jest obchodzony po stronie danych wejsciowych, nie narzedzia.

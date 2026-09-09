@@ -10,7 +10,7 @@
  * Wynik: results/<branch>.json (albo sciezka z --out)
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { globSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
@@ -37,7 +37,22 @@ function currentBranch(): string {
   return sh("git", ["rev-parse", "--abbrev-ref", "HEAD"]).stdout.trim() || "detached";
 }
 
-/** Nakłada patch, wykonuje pomiar, zawsze cofa patch. */
+/** Naklada kilka patchy, wykonuje pomiar, zawsze je cofa. */
+function withPatches_<T>(patchFiles: string[], measure: () => T): T {
+  const applied: string[] = [];
+  for (const patch of patchFiles) {
+    if (sh("git", ["apply", patch]).code === 0) applied.push(patch);
+  }
+  try {
+    return measure();
+  } finally {
+    for (const patch of applied.reverse()) {
+      sh("git", ["apply", "-R", patch]);
+    }
+  }
+}
+
+/** Naklada patch, wykonuje pomiar, zawsze cofa patch. */
 function withPatch<T>(patchFile: string, measure: () => T): T {
   sh("git", ["apply", patchFile]);
   try {
@@ -124,7 +139,11 @@ function measureCoverage(): Record<string, CoverageEntry> {
 
 // --- mutacje ---------------------------------------------------------------
 
+/** W jakim stanie kodu udalo sie zmierzyc mutacje. */
+type MutationState = "kod-z-defektami" | "kod-poprawiony" | "niemierzalne";
+
 interface MutationSummary {
+  state: MutationState;
   score: number;
   killed: number;
   survived: number;
@@ -133,14 +152,66 @@ interface MutationSummary {
   perFile: Record<string, number>;
 }
 
-function measureMutation(): MutationSummary | null {
-  const result = sh("npx", ["stryker", "run"]);
+const ALL_PATCHES = [
+  "patches/fix-loyalty.patch",
+  "patches/fix-cart-underflow.patch",
+  "patches/fix-coupon-prototype.patch",
+];
+
+/**
+ * Stryker wymaga, zeby POCZATKOWY przebieg testow byl zielony - inaczej
+ * przerywa z "Initial test run failed" i nie produkuje raportu.
+ *
+ * W tym repozytorium to jest istotne ograniczenie, nie drobiazg: suite, ktory
+ * poprawnie wykrywa zasiany defekt, wlasnie NIE przechodzi. Mierzymy wiec
+ * mutacje w tym stanie kodu, w ktorym dany suite jest zielony, i zapisujemy
+ * ktory to stan - inaczej porownywalibysmy liczby z dwoch roznych swiatow.
+ *
+ *   kod-z-defektami  - suite przechodzi na kodzie jak w src/
+ *   kod-poprawiony   - suite przechodzi po nalozeniu wszystkich patchy
+ *   niemierzalne     - nie przechodzi w zadnym z tych stanow
+ */
+function measureMutation(): MutationSummary {
   const reportPath = resolve(repoRoot, "reports/mutation/mutation.json");
-  if (!existsSync(reportPath)) {
-    console.error("  (stryker nie wyprodukowal raportu; exit=" + result.code + ")");
-    return null;
+
+  const runStryker = (state: MutationState): MutationSummary | undefined => {
+    // Kluczowe: usuwamy raport PRZED przebiegiem. Bez tego, gdy Stryker
+    // przerwie, odczytalibysmy raport z poprzedniego pomiaru - i przypisali
+    // jednemu branchowi liczby innego. Zdarzylo sie.
+    rmSync(reportPath, { force: true });
+
+    const result = sh("npx", ["stryker", "run"]);
+    if (!existsSync(reportPath)) {
+      console.error(`  (stryker nie wyprodukowal raportu; exit=${result.code})`);
+      return undefined;
+    }
+    return { ...parseMutationReport(reportPath), state };
+  };
+
+  if (runTests().passed) {
+    const summary = runStryker("kod-z-defektami");
+    if (summary !== undefined) return summary;
   }
 
+  console.log("     suite nie jest zielony na src/ - probuje z nalozonymi patchami");
+  const withPatches = withPatches_(ALL_PATCHES, () => {
+    if (!runTests().passed) return undefined;
+    return runStryker("kod-poprawiony");
+  });
+  if (withPatches !== undefined) return withPatches;
+
+  return {
+    state: "niemierzalne",
+    score: 0,
+    killed: 0,
+    survived: 0,
+    timeout: 0,
+    noCoverage: 0,
+    perFile: {},
+  };
+}
+
+function parseMutationReport(reportPath: string): Omit<MutationSummary, "state"> {
   const report = JSON.parse(readFileSync(reportPath, "utf8")) as {
     files: Record<string, { mutants: { status: string }[] }>;
   };
@@ -317,6 +388,7 @@ if (skipMutation) {
 } else {
   console.log("==> mutacje (stryker) - to trwa najdluzej");
   mutation = measureMutation();
+  console.log(`     stan pomiaru: ${mutation.state}`);
 }
 
 const report = {
@@ -344,7 +416,7 @@ writeFileSync(outputPath, JSON.stringify(report, null, 2) + "\n");
 console.log(`\ngotowe -> ${outputPath}`);
 console.log(
   `  pokrycie galezi: ${coverage["total"]?.branches.pct ?? "?"}%  ` +
-    `mutation score: ${mutation?.score ?? "?"}  ` +
+    `mutation score: ${mutation?.score ?? "?"} (${mutation?.state ?? "-"})  ` +
     `testow: ${suite.tests}`,
 );
 console.log(

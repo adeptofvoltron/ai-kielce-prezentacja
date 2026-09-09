@@ -24,7 +24,12 @@ interface Report {
   };
   coverage: Record<string, { branches: { pct: number }; lines: { pct: number } }>;
   oracles: Record<string, { verdict: string }>;
-  mutation: { score: number; survived: number; noCoverage: number } | null;
+  mutation: {
+    state?: string;
+    score: number;
+    survived: number;
+    noCoverage: number;
+  } | null;
 }
 
 const ORDER = ["main", "demo-01-llm-only", "demo-02-sbst-only", "demo-03-hybrid"];
@@ -61,8 +66,24 @@ const rows: string[][] = [
   ["---", ...reports.map(() => "---")],
   ["pokrycie galezi (src)", ...reports.map((r) => cell(r.coverage["total"]?.branches.pct) + "%")],
   ["pokrycie linii (src)", ...reports.map((r) => cell(r.coverage["total"]?.lines.pct) + "%")],
-  ["mutation score", ...reports.map((r) => (r.mutation === null ? "-" : `${r.mutation.score}%`))],
-  ["mutanty przezyle", ...reports.map((r) => (r.mutation === null ? "-" : cell(r.mutation.survived)))],
+  [
+    "mutation score",
+    ...reports.map((r) =>
+      r.mutation === null || r.mutation.state === "niemierzalne"
+        ? "niemierzalne"
+        : `${r.mutation.score}%`,
+    ),
+  ],
+  [
+    "mutacje mierzone na",
+    ...reports.map((r) => (r.mutation === null ? "-" : (r.mutation.state ?? "-"))),
+  ],
+  [
+    "mutanty przezyle",
+    ...reports.map((r) =>
+      r.mutation === null || r.mutation.state === "niemierzalne" ? "-" : cell(r.mutation.survived),
+    ),
+  ],
   ["liczba testow", ...reports.map((r) => cell(r.suite.testCases ?? r.suite.tests))],
   ["linii kodu testow", ...reports.map((r) => cell(r.suite.lines))],
   ["asercji na test", ...reports.map((r) => cell(r.suite.assertionsPerTest))],
@@ -101,6 +122,14 @@ ${table}
 
 Porownanie jest robione **per test**, nie po statusie calego pliku - inaczej
 jedna niepowiazana awaria maskowalaby sygnal.
+
+## Dlaczego przy mutation score jest kolumna "mierzone na"
+
+Stryker przerywa, jesli poczatkowy przebieg testow nie jest zielony. Suite,
+ktory poprawnie wykrywa zasiany defekt, wlasnie nie przechodzi - wiec na kodzie
+z \`src/\` nie da sie go zmierzyc. Harness mierzy takie suite po nalozeniu
+wszystkich patchy z \`patches/\` i zapisuje, w ktorym stanie kodu liczba
+powstala. Liczb z dwoch roznych stanow nie nalezy porownywac bezposrednio.
 
 Metodologia pomiaru: [../docs/METODOLOGIA.md](../docs/METODOLOGIA.md).
 `;

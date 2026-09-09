@@ -13,12 +13,16 @@ set -euo pipefail
 SEED="42"
 SEARCH_TIME="90"
 SEEDS_FILE=""
+SEED_GROUP=""
+ONLY_TARGET=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --seed) SEED="$2"; shift 2 ;;
     --search-time) SEARCH_TIME="$2"; shift 2 ;;
     --seeds) SEEDS_FILE="$2"; shift 2 ;;
+    --seed-group) SEED_GROUP="$2"; shift 2 ;;
+    --only-target) ONLY_TARGET="$2"; shift 2 ;;
     *) echo "nieznany argument: $1" >&2; exit 1 ;;
   esac
 done
@@ -31,10 +35,54 @@ rm -f tests/*.sbst.test.ts artifacts/syntest-raw/*.spec.js
 echo "==> 1/4 kompilacja src/*.ts -> dist/*.js (SynTest nie parsuje TypeScriptu)"
 npx tsc -p tsconfig.build.json
 
+# Wstrzykniecie ziaren semantycznych.
+#
+# SynTest zbiera literaly do context constant poola z plikow podanych
+# w --analysis-include, ale przyjmuje wylacznie sciezki lezace WEWNATRZ
+# --target-root-directory (inaczej: "The given path is not in the given root
+# path!"). Plik z ziarnami trafia wiec do dist/ pod ustalona nazwa
+# i jest jednoczesnie wykluczony z listy celow - ma zasilac przeszukiwanie,
+# a nie byc dla niego celem.
+SEEDS_IN_DIST="dist/__semantic_seeds__.js"
 ANALYSIS_ARGS=()
+rm -f "$SEEDS_IN_DIST"
+
 if [[ -n "$SEEDS_FILE" ]]; then
+  if [[ ! -f "$SEEDS_FILE" ]]; then
+    echo "blad: nie ma pliku z ziarnami: $SEEDS_FILE" >&2
+    exit 1
+  fi
+  if ! node --check "$SEEDS_FILE"; then
+    echo "blad: $SEEDS_FILE nie parsuje sie jako JavaScript" >&2
+    exit 1
+  fi
+
   echo "==> ziarna semantyczne: $SEEDS_FILE -> context constant pool"
-  ANALYSIS_ARGS=(--analysis-include "./dist/**/*.js" --analysis-include "$SEEDS_FILE")
+
+  # Filtr do alfabetu samplera. Bez niego przebieg konczy sie bez zadnego
+  # wygenerowanego testu - patrz naglowek scripts/filter-seeds.mjs.
+  if [[ -n "$SEED_GROUP" ]]; then
+    node scripts/filter-seeds.mjs "$SEEDS_FILE" "$SEEDS_IN_DIST" --only "$SEED_GROUP"
+  else
+    node scripts/filter-seeds.mjs "$SEEDS_FILE" "$SEEDS_IN_DIST"
+  fi
+
+  # --target-exclude nie wystarcza: narzedzie i tak bierze plik z ziarnami
+  # jako cel i marnuje na niego budzet przeszukiwania. Podajemy wiec jawna
+  # liste celow, zbudowana z src/*.ts, zamiast polegac na globie.
+  TARGET_ARGS=()
+  if [[ -n "$ONLY_TARGET" ]]; then
+    TARGET_ARGS+=(--target-include "./dist/${ONLY_TARGET}.js")
+  else
+    for source in src/*.ts; do
+      TARGET_ARGS+=(--target-include "./dist/$(basename "$source" .ts).js")
+    done
+  fi
+
+  ANALYSIS_ARGS=(
+    "${TARGET_ARGS[@]}"
+    --analysis-include "./dist/**/*.js"
+  )
 fi
 
 echo "==> 2/4 przeszukiwanie: DynaMOSA, seed=$SEED, search-time=${SEARCH_TIME}s"
@@ -43,6 +91,8 @@ npx syntest javascript test \
   --search-time "$SEARCH_TIME" \
   --total-time "$TOTAL_TIME" \
   "${ANALYSIS_ARGS[@]+"${ANALYSIS_ARGS[@]}"}"
+
+rm -f "$SEEDS_IN_DIST"
 
 RUN_DIR="$(find syntest -maxdepth 1 -type d -name 'FID-*' -printf '%T@ %p\n' \
   | sort -rn | head -1 | cut -d' ' -f2-)"
@@ -61,6 +111,10 @@ mkdir -p tests
 for spec in "$RUN_DIR"/tests/test-*.spec.js; do
   name="$(basename "$spec" .spec.js)"
   module="${name#test-}"
+  if [[ "$module" == __semantic_seeds__ ]]; then
+    echo "  pomijam $module (plik z ziarnami, nie modul produkcyjny)"
+    continue
+  fi
   npx tsx scripts/syntest-to-vitest.ts "$spec" "tests/${module}.sbst.test.ts"
 done
 
